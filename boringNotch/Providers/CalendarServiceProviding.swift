@@ -14,6 +14,29 @@ protocol CalendarServiceProviding {
     func requestAccess(to type: EKEntityType) async throws -> Bool
     func calendars() async -> [CalendarModel]
     func events(from start: Date, to end: Date, calendars: [String]) async -> [EventModel]
+    func reminders(in calendarID: String, includeCompleted: Bool) async throws -> [ReminderModel]
+    func addReminder(title: String, to calendarID: String) async throws -> ReminderModel
+    func setReminderCompleted(reminderID: String, completed: Bool) async throws
+}
+
+enum CalendarServiceError: LocalizedError {
+    case remindersAccessDenied
+    case reminderListNotFound
+    case reminderNotFound
+    case emptyReminderTitle
+
+    var errorDescription: String? {
+        switch self {
+        case .remindersAccessDenied:
+            return "Reminders access is not enabled."
+        case .reminderListNotFound:
+            return "The selected reminder list could not be found."
+        case .reminderNotFound:
+            return "The reminder could not be found."
+        case .emptyReminderTitle:
+            return "Enter a reminder title."
+        }
+    }
 }
 
 class CalendarService: CalendarServiceProviding {
@@ -107,13 +130,82 @@ class CalendarService: CalendarServiceProviding {
         }
     }
     
-    func setReminderCompleted(reminderID: String, completed: Bool) async {
-        guard let reminder = store.calendarItem(withIdentifier: reminderID) as? EKReminder else { return }
+    func reminders(in calendarID: String, includeCompleted: Bool) async throws -> [ReminderModel] {
+        guard hasAccess(to: .reminder) else {
+            throw CalendarServiceError.remindersAccessDenied
+        }
+
+        guard let calendar = reminderCalendar(with: calendarID) else {
+            throw CalendarServiceError.reminderListNotFound
+        }
+
+        return await withCheckedContinuation { continuation in
+            let predicate = store.predicateForReminders(in: [calendar])
+            store.fetchReminders(matching: predicate) { reminders in
+                let models = (reminders ?? [])
+                    .filter { includeCompleted || !$0.isCompleted }
+                    .compactMap { ReminderModel(from: $0) }
+                    .sorted(by: Self.sortReminders)
+
+                continuation.resume(returning: models)
+            }
+        }
+    }
+
+    func addReminder(title: String, to calendarID: String) async throws -> ReminderModel {
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else {
+            throw CalendarServiceError.emptyReminderTitle
+        }
+
+        guard hasAccess(to: .reminder) else {
+            throw CalendarServiceError.remindersAccessDenied
+        }
+
+        guard let calendar = reminderCalendar(with: calendarID) else {
+            throw CalendarServiceError.reminderListNotFound
+        }
+
+        let reminder = EKReminder(eventStore: store)
+        reminder.title = trimmedTitle
+        reminder.calendar = calendar
+
+        try store.save(reminder, commit: true)
+
+        guard let model = ReminderModel(from: reminder) else {
+            throw CalendarServiceError.reminderNotFound
+        }
+
+        return model
+    }
+
+    func setReminderCompleted(reminderID: String, completed: Bool) async throws {
+        guard let reminder = store.calendarItem(withIdentifier: reminderID) as? EKReminder else {
+            throw CalendarServiceError.reminderNotFound
+        }
+
         reminder.isCompleted = completed
-        do {
-            try store.save(reminder, commit: true)
-        } catch {
-            print("Failed to update reminder completion: \(error)")
+        try store.save(reminder, commit: true)
+    }
+
+    private func reminderCalendar(with id: String) -> EKCalendar? {
+        store.calendars(for: .reminder).first { $0.calendarIdentifier == id }
+    }
+
+    private static func sortReminders(_ lhs: ReminderModel, _ rhs: ReminderModel) -> Bool {
+        if lhs.isCompleted != rhs.isCompleted {
+            return !lhs.isCompleted
+        }
+
+        switch (lhs.dueDate, rhs.dueDate) {
+        case let (left?, right?) where left != right:
+            return left < right
+        case (_?, nil):
+            return true
+        case (nil, _?):
+            return false
+        default:
+            return lhs.title.localizedStandardCompare(rhs.title) == .orderedAscending
         }
     }
 }
@@ -175,6 +267,22 @@ extension EventModel {
             participants: [],
             timeZone: calendar.isSubscribed || calendar.isDelegate ? nil : reminder.timeZone,
             hasRecurrenceRules: reminder.hasRecurrenceRules,
+            priority: .init(from: reminder.priority)
+        )
+    }
+}
+
+extension ReminderModel {
+    init?(from reminder: EKReminder) {
+        guard let calendar = reminder.calendar else { return nil }
+
+        self.init(
+            id: reminder.calendarItemIdentifier,
+            title: reminder.title ?? "",
+            notes: reminder.notes,
+            dueDate: reminder.dueDateComponents.flatMap { Calendar.current.date(from: $0) },
+            isCompleted: reminder.isCompleted,
+            calendar: .init(from: calendar),
             priority: .init(from: reminder.priority)
         )
     }

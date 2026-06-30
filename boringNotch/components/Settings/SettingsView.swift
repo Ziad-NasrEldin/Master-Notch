@@ -856,7 +856,7 @@ struct RemindersSettings: View {
     var body: some View {
         Form {
             Section {
-                Text("Reminders with due dates appear in the notch calendar next to your events. minitap needs Reminders permission to read reminder lists and mark reminders complete from the notch.")
+                Text("The Reminders notch tab shows one selected Apple Reminders list with quick add and completion controls. Reminders with due dates can still appear in the Home tab calendar next to your events.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } header: {
@@ -883,7 +883,7 @@ struct RemindersSettings: View {
                         openReminderSettings()
                     }
                 case .fullAccess:
-                    Text("Permission is enabled. Select which reminder lists should appear in the notch.")
+                    Text("Permission is enabled. Select the reminder list to show in the Reminders notch tab.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 @unknown default:
@@ -896,9 +896,34 @@ struct RemindersSettings: View {
             }
 
             Section {
-                Defaults.Toggle(key: .showCalendar) {
-                    Text("Show calendar and reminders in notch")
+                if calendarManager.reminderAuthorizationStatus == .fullAccess {
+                    if calendarManager.reminderLists.isEmpty {
+                        Text("No reminder lists were found.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Picker("List", selection: selectedReminderListBinding) {
+                            Text("None").tag("")
+                            ForEach(calendarManager.reminderLists, id: \.id) { list in
+                                Text(list.title).tag(list.id)
+                            }
+                        }
+                        .pickerStyle(.menu)
+
+                        if calendarManager.selectedReminderList == nil {
+                            Text("Select a list to show reminders in the notch tab.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    Text("Reminder lists will appear here after permission is enabled.")
+                        .foregroundStyle(.secondary)
                 }
+            } header: {
+                Text("Reminders Tab")
+            }
+
+            Section {
                 Defaults.Toggle(key: .hideCompletedReminders) {
                     Text("Hide completed reminders")
                 }
@@ -907,6 +932,9 @@ struct RemindersSettings: View {
             }
 
             Section {
+                Defaults.Toggle(key: .showCalendar) {
+                    Text("Show calendar and due reminders in Home tab")
+                }
                 if calendarManager.reminderAuthorizationStatus == .fullAccess {
                     if calendarManager.reminderLists.isEmpty {
                         Text("No reminder lists were found.")
@@ -937,9 +965,9 @@ struct RemindersSettings: View {
                         .foregroundStyle(.secondary)
                 }
             } header: {
-                Text("Reminder Lists")
+                Text("Calendar Due Reminders")
             } footer: {
-                Text("This uses the same notch calendar surface as events, so turning off the calendar also hides reminders.")
+                Text("These lists affect due-dated reminders shown in the Home tab calendar. The Reminders tab uses the selected list above.")
                     .multilineTextAlignment(.trailing)
                     .foregroundStyle(.secondary)
                     .font(.caption)
@@ -952,6 +980,17 @@ struct RemindersSettings: View {
                 await calendarManager.refreshReminderAuthorizationStatus()
             }
         }
+    }
+
+    private var selectedReminderListBinding: Binding<String> {
+        Binding(
+            get: { Defaults[.selectedReminderListID] },
+            set: { listID in
+                Task {
+                    await calendarManager.setSelectedReminderListID(listID)
+                }
+            }
+        )
     }
 
     private var reminderAuthorizationText: String {

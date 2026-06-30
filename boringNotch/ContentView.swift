@@ -357,6 +357,8 @@ struct ContentView: View {
                         ShelfView()
                     case .pomodoro:
                         PomodoroView()
+                    case .reminders:
+                        RemindersNotchView()
                     }
                 }
                 .transition(

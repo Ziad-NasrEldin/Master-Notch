@@ -20,6 +20,12 @@ class CalendarManager: ObservableObject {
     @Published var allCalendars: [CalendarModel] = []
     @Published var eventCalendars: [CalendarModel] = []
     @Published var reminderLists: [CalendarModel] = []
+    @Published var selectedReminderList: CalendarModel?
+    @Published var reminders: [ReminderModel] = []
+    @Published var remindersLoading = false
+    @Published var addingReminder = false
+    @Published var reminderUpdatingIDs: Set<String> = []
+    @Published var reminderErrorMessage: String?
     @Published var selectedCalendarIDs: Set<String> = []
     @Published var calendarAuthorizationStatus: EKAuthorizationStatus = .notDetermined
     @Published var reminderAuthorizationStatus: EKAuthorizationStatus = .notDetermined
@@ -61,6 +67,8 @@ class CalendarManager: ObservableObject {
         self.reminderLists = all.filter { $0.isReminder }
         self.allCalendars = all // for legacy compatibility, can be removed if not needed
         updateSelectedCalendars()
+        updateSelectedReminderList()
+        await refreshSelectedReminders()
     }
 
     func checkCalendarAuthorization() async {
@@ -134,6 +142,9 @@ class CalendarManager: ObservableObject {
         reminderAuthorizationStatus = status
         if status == .fullAccess {
             await reloadCalendarAndReminderLists()
+        } else {
+            reminders = []
+            remindersLoading = false
         }
     }
 
@@ -147,7 +158,80 @@ class CalendarManager: ObservableObject {
             await reloadCalendarAndReminderLists()
         }
     }
-        
+
+    func updateSelectedReminderList() {
+        let selectedID = Defaults[.selectedReminderListID]
+
+        guard !selectedID.isEmpty else {
+            selectedReminderList = nil
+            reminders = []
+            return
+        }
+
+        guard let list = reminderLists.first(where: { $0.id == selectedID }) else {
+            Defaults[.selectedReminderListID] = ""
+            selectedReminderList = nil
+            reminders = []
+            return
+        }
+
+        selectedReminderList = list
+    }
+
+    func setSelectedReminderListID(_ id: String) async {
+        Defaults[.selectedReminderListID] = id
+        updateSelectedReminderList()
+        await refreshSelectedReminders()
+    }
+
+    func refreshSelectedReminders() async {
+        reminderErrorMessage = nil
+
+        guard reminderAuthorizationStatus == .fullAccess else {
+            reminders = []
+            remindersLoading = false
+            return
+        }
+
+        guard let selectedReminderList else {
+            reminders = []
+            remindersLoading = false
+            return
+        }
+
+        remindersLoading = true
+        defer { remindersLoading = false }
+
+        do {
+            reminders = try await calendarService.reminders(
+                in: selectedReminderList.id,
+                includeCompleted: true
+            )
+        } catch {
+            reminders = []
+            reminderErrorMessage = error.localizedDescription
+        }
+    }
+
+    func addReminderToSelectedList(title: String) async -> Bool {
+        guard let selectedReminderList else {
+            reminderErrorMessage = "Select a reminder list first."
+            return false
+        }
+
+        addingReminder = true
+        reminderErrorMessage = nil
+        defer { addingReminder = false }
+
+        do {
+            _ = try await calendarService.addReminder(title: title, to: selectedReminderList.id)
+            await refreshSelectedReminders()
+            return true
+        } catch {
+            reminderErrorMessage = error.localizedDescription
+            return false
+        }
+    }
 
     func updateSelectedCalendars() {
         // Populate selectedCalendarIDs based on Defaults calendar selection state
@@ -213,11 +297,30 @@ class CalendarManager: ObservableObject {
     }
     
     func setReminderCompleted(reminderID: String, completed: Bool) async {
-        await calendarService.setReminderCompleted(reminderID: reminderID, completed: completed)
-        // Refresh events after updating
+        do {
+            try await calendarService.setReminderCompleted(reminderID: reminderID, completed: completed)
+        } catch {
+            reminderErrorMessage = error.localizedDescription
+        }
+
         events = await calendarService.events(
             from: currentWeekStartDate,
             to: Calendar.current.date(byAdding: .day, value: 1, to: currentWeekStartDate)!,
             calendars: selectedCalendars.map { $0.id })
+        await refreshSelectedReminders()
+    }
+
+    func setReminderCompleted(_ reminder: ReminderModel, completed: Bool) async {
+        reminderUpdatingIDs.insert(reminder.id)
+        reminderErrorMessage = nil
+        defer { reminderUpdatingIDs.remove(reminder.id) }
+
+        do {
+            try await calendarService.setReminderCompleted(reminderID: reminder.id, completed: completed)
+            await refreshSelectedReminders()
+            await updateEvents()
+        } catch {
+            reminderErrorMessage = error.localizedDescription
+        }
     }
 }

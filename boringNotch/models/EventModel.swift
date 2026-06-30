@@ -26,6 +26,16 @@ struct EventModel: Equatable, Identifiable {
     let priority: Priority?
 }
 
+struct ReminderModel: Equatable, Identifiable {
+    let id: String
+    let title: String
+    let notes: String?
+    let dueDate: Date?
+    let isCompleted: Bool
+    let calendar: CalendarModel
+    let priority: Priority?
+}
+
 enum AttendanceStatus: Comparable {
     case accepted
     case maybe
