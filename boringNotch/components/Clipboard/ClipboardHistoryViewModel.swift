@@ -8,6 +8,7 @@ import Combine
 import CryptoKit
 import Defaults
 import Foundation
+import QuartzCore
 import SwiftUI
 
 private extension NSPasteboard.PasteboardType {
@@ -535,12 +536,13 @@ final class ClipboardPanelController {
     static let shared = ClipboardPanelController()
 
     private var windowController: NSWindowController?
+    private var isDismissing = false
 
     private init() {}
 
     func toggle() {
         if windowController?.window?.isVisible == true {
-            windowController?.window?.orderOut(nil)
+            dismiss()
         } else {
             show()
         }
@@ -565,6 +567,8 @@ final class ClipboardPanelController {
         }
 
         if let screen = NSScreen.main, let window = windowController?.window {
+            isDismissing = false
+            window.alphaValue = 1
             let frame = screen.visibleFrame
             window.setFrameOrigin(NSPoint(x: frame.midX - window.frame.width / 2, y: frame.maxY - window.frame.height - 18))
         }
@@ -572,5 +576,47 @@ final class ClipboardPanelController {
         NSApp.activate(ignoringOtherApps: true)
         windowController?.window?.makeKeyAndOrderFront(nil)
         windowController?.window?.orderFrontRegardless()
+    }
+
+    func dismiss(animated: Bool = true, completion: (() -> Void)? = nil) {
+        guard let window = windowController?.window, window.isVisible else {
+            completion?()
+            return
+        }
+
+        guard animated else {
+            window.orderOut(nil)
+            window.alphaValue = 1
+            completion?()
+            return
+        }
+
+        guard !isDismissing else {
+            completion?()
+            return
+        }
+
+        isDismissing = true
+        let originalFrame = window.frame
+        let targetFrame = originalFrame.insetBy(dx: 8, dy: 8)
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.34
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            window.animator().alphaValue = 0
+            window.animator().setFrame(targetFrame, display: true)
+        } completionHandler: { [weak self, weak window] in
+            window?.orderOut(nil)
+            window?.setFrame(originalFrame, display: false)
+            window?.alphaValue = 1
+            self?.isDismissing = false
+            completion?()
+        }
+    }
+
+    func showSettingsAndDismiss() {
+        dismiss {
+            SettingsWindowController.shared.showWindow()
+        }
     }
 }

@@ -189,7 +189,7 @@ struct ClipboardHistoryPanelView: View {
                 }
 
                 Button("Settings") {
-                    SettingsWindowController.shared.showWindow()
+                    ClipboardPanelController.shared.showSettingsAndDismiss()
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.primary)
@@ -351,28 +351,29 @@ private struct ClipboardHistoryRow: View {
 
     @ViewBuilder
     private var thumbnail: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.thinMaterial)
+        if item.kind == .image, let image {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(.thinMaterial)
 
-            if item.kind == .image, let image {
                 Image(nsImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 66, height: 66)
                     .clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            } else {
-                Image(systemName: item.kind.systemImage)
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(.secondary)
             }
+            .frame(width: 66, height: 66)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(.quaternary, lineWidth: 1)
+            )
+        } else {
+            Image(systemName: item.kind.systemImage)
+                .font(.system(size: 25, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 66, height: 66)
         }
-        .frame(width: 66, height: 66)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
-        )
     }
 
     private var rowActions: some View {
