@@ -75,6 +75,76 @@ enum CursorScaleActivationMode: String, CaseIterable, Identifiable, Defaults.Ser
     var id: String { self.rawValue }
 }
 
+enum NotchTheme: String, CaseIterable, Identifiable, Defaults.Serializable {
+    case black = "Black"
+    case white = "White"
+
+    var id: String { rawValue }
+
+    var background: Color {
+        switch self {
+        case .black:
+            return .black
+        case .white:
+            return Color(red: 0.96, green: 0.96, blue: 0.94)
+        }
+    }
+
+    var primaryForeground: Color {
+        switch self {
+        case .black:
+            return .white
+        case .white:
+            return Color(red: 0.08, green: 0.08, blue: 0.07)
+        }
+    }
+
+    var secondaryForeground: Color {
+        switch self {
+        case .black:
+            return .gray
+        case .white:
+            return Color(red: 0.38, green: 0.38, blue: 0.34)
+        }
+    }
+
+    var buttonBackground: Color {
+        switch self {
+        case .black:
+            return .black
+        case .white:
+            return Color.white.opacity(0.82)
+        }
+    }
+
+    var selectedTabBackground: Color {
+        switch self {
+        case .black:
+            return Color(nsColor: .secondarySystemFill)
+        case .white:
+            return Color.black.opacity(0.08)
+        }
+    }
+
+    var shadow: Color {
+        switch self {
+        case .black:
+            return .black.opacity(0.7)
+        case .white:
+            return .black.opacity(0.16)
+        }
+    }
+
+    var preferredColorScheme: ColorScheme? {
+        switch self {
+        case .black:
+            return .dark
+        case .white:
+            return .light
+        }
+    }
+}
+
 extension Defaults.Keys {
     // MARK: General
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
@@ -110,6 +180,7 @@ extension Defaults.Keys {
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
     static let cornerRadiusScaling = Key<Bool>("cornerRadiusScaling", default: true)
+    static let notchTheme = Key<NotchTheme>("notchTheme", default: .black)
 
     static let showNotHumanFace = Key<Bool>("showNotHumanFace", default: false)
     static let tileShowLabels = Key<Bool>("tileShowLabels", default: false)

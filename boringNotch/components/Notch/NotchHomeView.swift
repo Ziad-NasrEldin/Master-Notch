@@ -112,10 +112,11 @@ struct AlbumArtView: View {
 struct MusicControlsView: View {
     @ObservedObject var musicManager = MusicManager.shared
         @EnvironmentObject var vm: BoringViewModel
-        @ObservedObject var webcamManager = WebcamManager.shared
+    @ObservedObject var webcamManager = WebcamManager.shared
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
     @State private var lastDragged: Date = .distantPast
+    @Default(.notchTheme) private var notchTheme
     @Default(.musicControlSlots) private var slotConfig
     @Default(.musicControlSlotLimit) private var slotLimit
 
@@ -141,15 +142,15 @@ struct MusicControlsView: View {
     private func songInfo(width: CGFloat) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             MarqueeText(
-                $musicManager.songTitle, font: .headline, nsFont: .headline, textColor: .white,
+                $musicManager.songTitle, font: .headline, nsFont: .headline, textColor: notchTheme.primaryForeground,
                 frameWidth: width)
             MarqueeText(
                 $musicManager.artistName,
                 font: .headline,
                 nsFont: .headline,
-                textColor: Defaults[.playerColorTinting]
+                textColor: Defaults[.playerColorTinting] && notchTheme == .black
                     ? Color(nsColor: musicManager.avgColor)
-                        .ensureMinimumBrightness(factor: 0.6) : .gray,
+                        .ensureMinimumBrightness(factor: 0.6) : notchTheme.secondaryForeground,
                 frameWidth: width
             )
             .fontWeight(.medium)
@@ -177,7 +178,7 @@ struct MusicControlsView: View {
                         .constant(line),
                         font: .subheadline,
                         nsFont: .subheadline,
-                        textColor: musicManager.isFetchingLyrics ? .gray.opacity(0.7) : .gray,
+                        textColor: musicManager.isFetchingLyrics ? notchTheme.secondaryForeground.opacity(0.7) : notchTheme.secondaryForeground,
                         frameWidth: width
                     )
                     .font(isPersian ? .custom("Vazirmatn-Regular", size: NSFont.preferredFont(forTextStyle: .subheadline).pointSize) : .subheadline)
@@ -333,6 +334,7 @@ struct VolumeControlView: View {
     @State private var dragging: Bool = false
     @State private var showVolumeSlider: Bool = false
     @State private var lastVolumeUpdateTime: Date = Date.distantPast
+    @Default(.notchTheme) private var notchTheme
     private let volumeUpdateThrottle: TimeInterval = 0.1
     
     var body: some View {
@@ -346,7 +348,7 @@ struct VolumeControlView: View {
             }) {
                 Image(systemName: volumeIcon)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(musicManager.volumeControlSupported ? .white : .gray)
+                    .foregroundColor(musicManager.volumeControlSupported ? notchTheme.primaryForeground : notchTheme.secondaryForeground)
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(!musicManager.volumeControlSupported)
@@ -356,7 +358,7 @@ struct VolumeControlView: View {
                 CustomSlider(
                     value: $volumeSliderValue,
                     range: 0.0...1.0,
-                    color: .white,
+                    color: notchTheme.primaryForeground,
                     dragging: $dragging,
                     lastDragged: .constant(Date.distantPast),
                     onValueChange: { newValue in
@@ -478,6 +480,7 @@ struct MusicSliderView: View {
     let playbackRate: Double
     let isPlaying: Bool
     var onValueChange: (Double) -> Void
+    @Default(.notchTheme) private var notchTheme
 
 
     var body: some View {
@@ -501,8 +504,8 @@ struct MusicSliderView: View {
             }
             .fontWeight(.medium)
             .foregroundColor(
-                Defaults[.playerColorTinting]
-                    ? Color(nsColor: color).ensureMinimumBrightness(factor: 0.6) : .gray
+                Defaults[.playerColorTinting] && notchTheme == .black
+                    ? Color(nsColor: color).ensureMinimumBrightness(factor: 0.6) : notchTheme.secondaryForeground
             )
             .font(.caption)
         }

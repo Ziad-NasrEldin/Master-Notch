@@ -21,6 +21,7 @@ struct Config: Equatable {
 struct WheelPicker: View {
     @EnvironmentObject var vm: BoringViewModel
     @Binding var selectedDate: Date
+    @Default(.notchTheme) private var notchTheme
     @State private var scrollPosition: Int?
     @State private var haptics: Bool = false
     @State private var byClick: Bool = false
@@ -105,7 +106,7 @@ struct WheelPicker: View {
     private func dayText(date: String, isToday: Bool, isSelected: Bool) -> some View {
         Text(date)
             .font(.caption)
-            .foregroundColor(isSelected ? .white : Color(white: 0.65))
+            .foregroundColor(isSelected ? .white : notchTheme.secondaryForeground)
     }
 
     private func dateCircle(date: Date, isToday: Bool, isSelected: Bool) -> some View {
@@ -120,7 +121,7 @@ struct WheelPicker: View {
             Text("\(date.date)")
                 .font(.body)
                 .fontWeight(.medium)
-                .foregroundColor(isSelected ? .white : Color(white: isToday ? 0.9 : 0.65))
+                .foregroundColor(isSelected ? .white : (isToday ? notchTheme.primaryForeground : notchTheme.secondaryForeground))
         }
     }
 
@@ -181,6 +182,7 @@ struct WheelPicker: View {
 struct CalendarView: View {
     @EnvironmentObject var vm: BoringViewModel
     @ObservedObject private var calendarManager = CalendarManager.shared
+    @Default(.notchTheme) private var notchTheme
     @State private var selectedDate = Date()
 
     var body: some View {
@@ -190,23 +192,23 @@ struct CalendarView: View {
                     Text(selectedDate.formatted(.dateTime.month(.abbreviated)))
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(notchTheme.primaryForeground)
                     Text(selectedDate.formatted(.dateTime.year()))
                         .font(.title3)
                         .fontWeight(.light)
-                        .foregroundColor(Color(white: 0.65))
+                        .foregroundColor(notchTheme.secondaryForeground)
                 }
 
                 ZStack(alignment: .top) {
                     WheelPicker(selectedDate: $selectedDate, config: Config())
                     HStack(alignment: .top) {
                         LinearGradient(
-                            colors: [Color.black, .clear], startPoint: .leading, endPoint: .trailing
+                            colors: [notchTheme.background, .clear], startPoint: .leading, endPoint: .trailing
                         )
                         .frame(width: 20)
                         Spacer()
                         LinearGradient(
-                            colors: [.clear, Color.black], startPoint: .leading, endPoint: .trailing
+                            colors: [.clear, notchTheme.background], startPoint: .leading, endPoint: .trailing
                         )
                         .frame(width: 20)
                     }
@@ -247,18 +249,19 @@ struct CalendarView: View {
 
 struct EmptyEventsView: View {
     let selectedDate: Date
+    @Default(.notchTheme) private var notchTheme
     
     var body: some View {
         VStack {
             Image(systemName: "calendar.badge.checkmark")
                 .font(.title)
-                .foregroundColor(Color(white: 0.65))
+                .foregroundColor(notchTheme.secondaryForeground)
             Text(Calendar.current.isDateInToday(selectedDate) ? "No events today" : "No events")
                 .font(.subheadline)
-                .foregroundColor(.white)
+                .foregroundColor(notchTheme.primaryForeground)
             Text("Enjoy your free time!")
                 .font(.caption)
-                .foregroundColor(Color(white: 0.65))
+                .foregroundColor(notchTheme.secondaryForeground)
         }
     }
 }
@@ -269,6 +272,7 @@ struct EventListView: View {
     let events: [EventModel]
     @Default(.autoScrollToNextEvent) private var autoScrollToNextEvent
     @Default(.showFullEventTitles) private var showFullEventTitles
+    @Default(.notchTheme) private var notchTheme
 
 
     static func filteredEvents(events: [EventModel]) -> [EventModel] {
@@ -368,7 +372,7 @@ struct EventListView: View {
                     HStack {
                         Text(event.title)
                             .font(.callout)
-                            .foregroundColor(.white)
+                            .foregroundColor(notchTheme.primaryForeground)
                             .lineLimit(showFullEventTitles ? nil : 1)
                         Spacer(minLength: 0)
                         VStack(alignment: .trailing, spacing: 4) {
@@ -376,11 +380,11 @@ struct EventListView: View {
                                 Text("All-day")
                                     .font(.caption)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(notchTheme.primaryForeground)
                                     .lineLimit(1)
                             } else {
                                 Text(event.start, style: .time)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(notchTheme.primaryForeground)
                                     .font(.caption)
                             }
                         }
@@ -406,13 +410,13 @@ struct EventListView: View {
                         Text(event.title)
                             .font(.callout)
                             .fontWeight(.medium)
-                            .foregroundColor(.white)
+                            .foregroundColor(notchTheme.primaryForeground)
                             .lineLimit(showFullEventTitles ? nil : 2)
 
                         if let location = event.location, !location.isEmpty {
                             Text(location)
                                 .font(.caption)
-                                .foregroundColor(Color(white: 0.65))
+                                .foregroundColor(notchTheme.secondaryForeground)
                                 .lineLimit(1)
                         }
                     }
@@ -422,13 +426,13 @@ struct EventListView: View {
                             Text("All-day")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(.white)
+                                .foregroundColor(notchTheme.primaryForeground)
                                 .lineLimit(1)
                         } else {
                             Text(event.start, style: .time)
-                                .foregroundColor(.white)
+                                .foregroundColor(notchTheme.primaryForeground)
                             Text(event.end, style: .time)
-                                .foregroundColor(Color(white: 0.65))
+                                .foregroundColor(notchTheme.secondaryForeground)
                         }
                     }
                     .font(.caption)
@@ -475,6 +479,6 @@ struct ReminderToggle: View {
 #Preview {
     CalendarView()
         .frame(width: 215, height: 130)
-        .background(.black)
+        .background(Defaults[.notchTheme].background)
         .environmentObject(BoringViewModel())
 }

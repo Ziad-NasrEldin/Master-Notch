@@ -206,6 +206,7 @@ final class PomodoroTimerModel: ObservableObject {
 
 struct PomodoroView: View {
     @ObservedObject private var timer = PomodoroTimerModel.shared
+    @Default(.notchTheme) private var notchTheme
 
     var body: some View {
         HStack(spacing: 12) {
@@ -221,12 +222,14 @@ struct PomodoroView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
+        .background(
+            notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 1 : 0.7),
+            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
         )
-        .shadow(color: .black.opacity(0.08), radius: 10, y: 4)
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(notchTheme.secondaryForeground.opacity(0.16), lineWidth: 1)
+        )
         .padding(.horizontal, 10)
         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
     }
@@ -239,14 +242,14 @@ struct PomodoroView: View {
 
             Text(compactPhaseTitle)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(notchTheme.primaryForeground)
 
             Spacer(minLength: 0)
 
             if timer.completedFocusSessions > 0 {
                 Label("\(timer.completedFocusSessions)", systemImage: "checkmark.circle.fill")
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(notchTheme.secondaryForeground)
             }
         }
     }
@@ -254,10 +257,10 @@ struct PomodoroView: View {
     private var timerDial: some View {
         ZStack {
             Circle()
-                .fill(.thinMaterial)
+                .fill(notchTheme.background.opacity(notchTheme == .white ? 0.78 : 0.42))
 
             Circle()
-                .stroke(Color.primary.opacity(0.08), lineWidth: 7)
+                .stroke(notchTheme.secondaryForeground.opacity(0.18), lineWidth: 7)
 
             Circle()
                 .trim(from: 0, to: max(timer.progress, timer.phase == .complete ? 1 : 0.018))
@@ -268,7 +271,7 @@ struct PomodoroView: View {
             Text(timer.timeDisplay)
                 .font(.system(size: 25, weight: .semibold))
                 .monospacedDigit()
-                .foregroundStyle(.primary)
+                .foregroundStyle(notchTheme.primaryForeground)
         }
     }
 
@@ -283,11 +286,11 @@ struct PomodoroView: View {
         HStack(spacing: 5) {
             Text(title)
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(notchTheme.secondaryForeground)
 
             Text("\(value)m")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(notchTheme.primaryForeground)
                 .monospacedDigit()
 
             Spacer(minLength: 0)
@@ -302,10 +305,13 @@ struct PomodoroView: View {
         .padding(.leading, 8)
         .padding(.trailing, 4)
         .padding(.vertical, 5)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .background(
+            notchTheme.background.opacity(notchTheme == .white ? 0.72 : 0.38),
+            in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
+                .stroke(notchTheme.secondaryForeground.opacity(0.14), lineWidth: 1)
         )
     }
 

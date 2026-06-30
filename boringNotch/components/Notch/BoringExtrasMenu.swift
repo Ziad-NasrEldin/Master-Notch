@@ -5,30 +5,41 @@
 //  Created by Harsh Vardhan  Goswami  on 04/08/24.
 //
 
+import Defaults
 import SwiftUI
 
 struct BoringLargeButtons: View {
     var action: () -> Void
     var icon: Image
     var title: String
+    @Default(.notchTheme) private var notchTheme
+
     var body: some View {
         Button (
             action:action,
             label: {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12.0).fill(.black).frame(width: 70, height: 70)
+                    RoundedRectangle(cornerRadius: 12.0)
+                        .fill(notchTheme.buttonBackground)
+                        .frame(width: 70, height: 70)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12.0)
+                                .stroke(notchTheme.secondaryForeground.opacity(0.16), lineWidth: 1)
+                        )
                     VStack(spacing: 8) {
                         icon.resizable()
                             .aspectRatio(contentMode: .fit).frame(width:20)
                         Text(title).font(.body)
                     }
+                    .foregroundStyle(notchTheme.primaryForeground)
                 }
-            }).buttonStyle(PlainButtonStyle()).shadow(color: .black.opacity(0.5), radius: 10)
+            }).buttonStyle(PlainButtonStyle()).shadow(color: notchTheme.shadow, radius: 10)
     }
 }
 
 struct BoringExtrasMenu : View {
     @ObservedObject var vm: BoringViewModel
+    @Default(.notchTheme) private var notchTheme
     
     var body: some View {
         VStack{
@@ -57,15 +68,22 @@ struct BoringExtrasMenu : View {
             }
         }) {
             ZStack {
-                RoundedRectangle(cornerRadius: 12.0).fill(.black).frame(width: 70, height: 70)
+                RoundedRectangle(cornerRadius: 12.0)
+                    .fill(notchTheme.buttonBackground)
+                    .frame(width: 70, height: 70)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12.0)
+                            .stroke(notchTheme.secondaryForeground.opacity(0.16), lineWidth: 1)
+                    )
                 VStack(spacing: 8) {
                     Image(systemName: "gear").resizable()
                         .aspectRatio(contentMode: .fit).frame(width:20)
                     Text("Settings").font(.body)
                 }
+                .foregroundStyle(notchTheme.primaryForeground)
             }
         }
-        .buttonStyle(PlainButtonStyle()).shadow(color: .black.opacity(0.5), radius: 10)
+        .buttonStyle(PlainButtonStyle()).shadow(color: notchTheme.shadow, radius: 10)
     }
     
     var hide: some View {

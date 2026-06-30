@@ -5,6 +5,7 @@
 //  Created by Hugo Persson on 2024-08-25.
 //
 
+import Defaults
 import SwiftUI
 
 struct TabModel: Identifiable {
@@ -22,6 +23,7 @@ let tabs = [
 
 struct TabSelectionView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @Default(.notchTheme) private var notchTheme
     @Namespace var animation
     var body: some View {
         HStack(spacing: 0) {
@@ -32,15 +34,15 @@ struct TabSelectionView: View {
                         }
                     }
                     .frame(height: 26)
-                    .foregroundStyle(tab.view == coordinator.currentView ? .white : .gray)
+                    .foregroundStyle(tab.view == coordinator.currentView ? notchTheme.primaryForeground : notchTheme.secondaryForeground)
                     .background {
                         if tab.view == coordinator.currentView {
                             Capsule()
-                                .fill(coordinator.currentView == tab.view ? Color(nsColor: .secondarySystemFill) : Color.clear)
+                                .fill(coordinator.currentView == tab.view ? notchTheme.selectedTabBackground : Color.clear)
                                 .matchedGeometryEffect(id: "capsule", in: animation)
                         } else {
                             Capsule()
-                                .fill(coordinator.currentView == tab.view ? Color(nsColor: .secondarySystemFill) : Color.clear)
+                                .fill(coordinator.currentView == tab.view ? notchTheme.selectedTabBackground : Color.clear)
                                 .matchedGeometryEffect(id: "capsule", in: animation)
                                 .hidden()
                         }

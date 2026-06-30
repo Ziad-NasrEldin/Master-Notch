@@ -5,14 +5,16 @@
 //  Created by Alexander on 2025-09-24.
 //
 
-import SwiftUI
 import AppKit
+import Defaults
+import SwiftUI
 
 struct ShelfView: View {
     @EnvironmentObject var vm: BoringViewModel
     @StateObject var tvm = ShelfStateViewModel.shared
     @StateObject var selection = ShelfSelectionModel.shared
     @StateObject private var quickLookService = QuickLookService()
+    @Default(.notchTheme) private var notchTheme
     private let spacing: CGFloat = 8
 
     var body: some View {
@@ -63,7 +65,7 @@ struct ShelfView: View {
             .stroke(
                 vm.dragDetectorTargeting
                     ? Color.accentColor.opacity(0.9)
-                    : Color.white.opacity(0.1),
+                    : notchTheme.secondaryForeground.opacity(0.14),
                 style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
             )
             .overlay {
@@ -84,11 +86,11 @@ struct ShelfView: View {
                     Image(systemName: "tray.and.arrow.down")
                         .symbolVariant(.fill)
                         .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(.white, .gray)
+                        .foregroundStyle(notchTheme.primaryForeground, notchTheme.secondaryForeground)
                         .imageScale(.large)
                     
                     Text("Drop files here")
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(notchTheme.secondaryForeground)
                         .font(.system(.title3, design: .rounded))
                         .fontWeight(.medium)
                 }

@@ -39,6 +39,9 @@ struct SettingsView: View {
                 NavigationLink(value: "Calendar") {
                     Label("Calendar", systemImage: "calendar")
                 }
+                NavigationLink(value: "Reminders") {
+                    Label("Reminders", systemImage: "checklist.checked")
+                }
                 NavigationLink(value: "HUD") {
                     Label("HUDs", systemImage: "dial.medium.fill")
                 }
@@ -82,6 +85,8 @@ struct SettingsView: View {
                     Media()
                 case "Calendar":
                     CalendarSettings()
+                case "Reminders":
+                    RemindersSettings()
                 case "HUD":
                     HUD()
                 case "Battery":
@@ -780,7 +785,6 @@ struct Media: View {
 struct CalendarSettings: View {
     @ObservedObject private var calendarManager = CalendarManager.shared
     @Default(.showCalendar) var showCalendar: Bool
-    @Default(.hideCompletedReminders) var hideCompletedReminders
     @Default(.hideAllDayEvents) var hideAllDayEvents
     @Default(.autoScrollToNextEvent) var autoScrollToNextEvent
 
@@ -788,9 +792,6 @@ struct CalendarSettings: View {
         Form {
             Defaults.Toggle(key: .showCalendar) {
                 Text("Show calendar")
-            }
-            Defaults.Toggle(key: .hideCompletedReminders) {
-                Text("Hide completed reminders")
             }
             Defaults.Toggle(key: .hideAllDayEvents) {
                 Text("Hide all-day events")
@@ -837,50 +838,155 @@ struct CalendarSettings: View {
                     }
                 }
             }
-            Section(header: Text("Reminders")) {
-                if calendarManager.reminderAuthorizationStatus != .fullAccess {
-                    Text("Reminder access is denied. Please enable it in System Settings.")
-                        .foregroundColor(.red)
-                        .multilineTextAlignment(.center)
-                        .padding()
-                    Button("Open Reminder Settings") {
-                        if let settingsURL = URL(
-                            string:
-                                "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders"
-                        ) {
-                            NSWorkspace.shared.open(settingsURL)
-                        }
-                    }
-                } else {
-                    List {
-                        ForEach(calendarManager.reminderLists, id: \.id) { calendar in
-                            Toggle(
-                                isOn: Binding(
-                                    get: { calendarManager.getCalendarSelected(calendar) },
-                                    set: { isSelected in
-                                        Task {
-                                            await calendarManager.setCalendarSelected(
-                                                calendar, isSelected: isSelected)
-                                        }
-                                    }
-                                )
-                            ) {
-                                Text(calendar.title)
-                            }
-                            .accentColor(lighterColor(from: calendar.color))
-                            .disabled(!showCalendar)
-                        }
-                    }
-                }
-            }
         }
         .accentColor(.effectiveAccent)
         .navigationTitle("Calendar")
         .onAppear {
             Task {
                 await calendarManager.checkCalendarAuthorization()
-                await calendarManager.checkReminderAuthorization()
             }
+        }
+    }
+}
+
+struct RemindersSettings: View {
+    @ObservedObject private var calendarManager = CalendarManager.shared
+    @Default(.showCalendar) var showCalendar: Bool
+
+    var body: some View {
+        Form {
+            Section {
+                Text("Reminders with due dates appear in the notch calendar next to your events. minitap needs Reminders permission to read reminder lists and mark reminders complete from the notch.")
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } header: {
+                Text("How reminders work")
+            }
+
+            Section {
+                HStack {
+                    Text("Authorization")
+                    Spacer()
+                    Text(reminderAuthorizationText)
+                        .foregroundStyle(reminderAuthorizationColor)
+                }
+
+                switch calendarManager.reminderAuthorizationStatus {
+                case .notDetermined:
+                    Button("Request Reminders Access") {
+                        Task {
+                            await calendarManager.requestReminderAuthorization()
+                        }
+                    }
+                case .denied, .restricted, .writeOnly:
+                    Button("Open Reminder Settings") {
+                        openReminderSettings()
+                    }
+                case .fullAccess:
+                    Text("Permission is enabled. Select which reminder lists should appear in the notch.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                @unknown default:
+                    Button("Open Reminder Settings") {
+                        openReminderSettings()
+                    }
+                }
+            } header: {
+                Text("Permission")
+            }
+
+            Section {
+                Defaults.Toggle(key: .showCalendar) {
+                    Text("Show calendar and reminders in notch")
+                }
+                Defaults.Toggle(key: .hideCompletedReminders) {
+                    Text("Hide completed reminders")
+                }
+            } header: {
+                Text("Display")
+            }
+
+            Section {
+                if calendarManager.reminderAuthorizationStatus == .fullAccess {
+                    if calendarManager.reminderLists.isEmpty {
+                        Text("No reminder lists were found.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        List {
+                            ForEach(calendarManager.reminderLists, id: \.id) { calendar in
+                                Toggle(
+                                    isOn: Binding(
+                                        get: { calendarManager.getCalendarSelected(calendar) },
+                                        set: { isSelected in
+                                            Task {
+                                                await calendarManager.setCalendarSelected(
+                                                    calendar, isSelected: isSelected)
+                                            }
+                                        }
+                                    )
+                                ) {
+                                    Text(calendar.title)
+                                }
+                                .accentColor(lighterColor(from: calendar.color))
+                                .disabled(!showCalendar)
+                            }
+                        }
+                    }
+                } else {
+                    Text("Reminder lists will appear here after permission is enabled.")
+                        .foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Reminder Lists")
+            } footer: {
+                Text("This uses the same notch calendar surface as events, so turning off the calendar also hides reminders.")
+                    .multilineTextAlignment(.trailing)
+                    .foregroundStyle(.secondary)
+                    .font(.caption)
+            }
+        }
+        .accentColor(.effectiveAccent)
+        .navigationTitle("Reminders")
+        .onAppear {
+            Task {
+                await calendarManager.refreshReminderAuthorizationStatus()
+            }
+        }
+    }
+
+    private var reminderAuthorizationText: String {
+        switch calendarManager.reminderAuthorizationStatus {
+        case .notDetermined:
+            return "Not requested"
+        case .restricted:
+            return "Restricted"
+        case .denied:
+            return "Denied"
+        case .fullAccess:
+            return "Allowed"
+        case .writeOnly:
+            return "Write only"
+        @unknown default:
+            return "Unknown"
+        }
+    }
+
+    private var reminderAuthorizationColor: Color {
+        switch calendarManager.reminderAuthorizationStatus {
+        case .fullAccess:
+            return .green
+        case .notDetermined:
+            return .secondary
+        default:
+            return .red
+        }
+    }
+
+    private func openReminderSettings() {
+        if let settingsURL = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders"
+        ) {
+            NSWorkspace.shared.open(settingsURL)
         }
     }
 }
@@ -1340,6 +1446,7 @@ struct ClipboardSettings: View {
 
 struct Appearance: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
+    @Default(.notchTheme) var notchTheme
     @Default(.mirrorShape) var mirrorShape
     @Default(.sliderColor) var sliderColor
     @Default(.useMusicVisualizer) var useMusicVisualizer
@@ -1357,6 +1464,11 @@ struct Appearance: View {
         Form {
             Section {
                 Toggle("Always show tabs", isOn: $coordinator.alwaysShowTabs)
+                Picker("Notch theme", selection: $notchTheme) {
+                    ForEach(NotchTheme.allCases) { theme in
+                        Text(theme.rawValue).tag(theme)
+                    }
+                }
                 Defaults.Toggle(key: .settingsIconInNotch) {
                     Text("Show settings icon in notch")
                 }

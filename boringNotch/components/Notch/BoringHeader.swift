@@ -13,6 +13,7 @@ struct BoringHeader: View {
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @StateObject var tvm = ShelfStateViewModel.shared
+    @Default(.notchTheme) private var notchTheme
     var body: some View {
         HStack(spacing: 0) {
             HStack {
@@ -29,7 +30,7 @@ struct BoringHeader: View {
 
             if vm.notchState == .open {
                 Rectangle()
-                    .fill(NSScreen.screen(withUUID: coordinator.selectedScreenUUID)?.safeAreaInsets.top ?? 0 > 0 ? .black : .clear)
+                    .fill(NSScreen.screen(withUUID: coordinator.selectedScreenUUID)?.safeAreaInsets.top ?? 0 > 0 ? notchTheme.background : .clear)
                     .frame(width: vm.closedNotchSize.width)
                     .mask {
                         NotchShape()
@@ -47,11 +48,11 @@ struct BoringHeader: View {
                                 vm.toggleCameraPreview()
                             }) {
                                 Capsule()
-                                    .fill(.black)
+                                    .fill(notchTheme.buttonBackground)
                                     .frame(width: 30, height: 30)
                                     .overlay {
                                         Image(systemName: "web.camera")
-                                            .foregroundColor(.white)
+                                            .foregroundColor(notchTheme.primaryForeground)
                                             .padding()
                                             .imageScale(.medium)
                                     }
@@ -66,11 +67,11 @@ struct BoringHeader: View {
                                 
                             }) {
                                 Capsule()
-                                    .fill(.black)
+                                    .fill(notchTheme.buttonBackground)
                                     .frame(width: 30, height: 30)
                                     .overlay {
                                         Image(systemName: "gear")
-                                            .foregroundColor(.white)
+                                            .foregroundColor(notchTheme.primaryForeground)
                                             .padding()
                                             .imageScale(.medium)
                                     }
@@ -98,7 +99,7 @@ struct BoringHeader: View {
             .blur(radius: vm.notchState == .closed ? 20 : 0)
             .zIndex(2)
         }
-        .foregroundColor(.gray)
+        .foregroundColor(notchTheme.secondaryForeground)
         .environmentObject(vm)
     }
 

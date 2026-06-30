@@ -10,20 +10,21 @@ struct MinimalFaceFeatures: View {
     @State private var isBlinking = false
     @State var height:CGFloat = 20;
     @State var width:CGFloat = 30;
+    var color: Color = .white
     
     var body: some View {
         VStack(spacing: 4) { // Adjusted spacing to fit within 30x30
             // Eyes
             HStack(spacing: 4) { // Adjusted spacing to fit within 30x30
-                Eye(isBlinking: $isBlinking)
-                Eye(isBlinking: $isBlinking)
+                Eye(isBlinking: $isBlinking, color: color)
+                Eye(isBlinking: $isBlinking, color: color)
             }
             
             // Nose and mouth combined
             VStack(spacing: 2) { // Adjusted spacing to fit within 30x30
                 // Nose
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(Color.white)
+                    .fill(color)
                     .frame(width: 3, height: 4)
                 
                 // Mouth (happy)
@@ -34,7 +35,7 @@ struct MinimalFaceFeatures: View {
                         path.move(to: CGPoint(x: 0, y: height / 2))
                         path.addQuadCurve(to: CGPoint(x: width, y: height / 2), control: CGPoint(x: width / 2, y: height))
                     }
-                    .stroke(Color.white, lineWidth: 2)
+                    .stroke(color, lineWidth: 2)
                 }
                 .frame(width: 14, height: 10)
             }
@@ -61,10 +62,11 @@ struct MinimalFaceFeatures: View {
 
 struct Eye: View {
     @Binding var isBlinking: Bool
+    var color: Color = .white
     
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
-            .fill(Color.white)
+            .fill(color)
             .frame(width: 4, height: isBlinking ? 1 : 4)
             .frame(maxWidth: 15, maxHeight: 15) // Adjusted max size
             .animation(.easeInOut(duration: 0.1), value: isBlinking)

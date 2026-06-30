@@ -12,6 +12,7 @@ struct BatteryView: View {
     var isForNotification: Bool
 
     var icon: String = "battery.0"
+    @Default(.notchTheme) private var notchTheme
 
     /// Determines the icon to display when charging.
     var iconStatus: String {
@@ -35,7 +36,7 @@ struct BatteryView: View {
         } else if isCharging || isPluggedIn || levelBattery == 100 {
             return .green
         } else {
-            return .white
+            return notchTheme.primaryForeground
         }
     }
 
@@ -46,7 +47,7 @@ struct BatteryView: View {
                 .resizable()
                 .fontWeight(.thin)
                 .aspectRatio(contentMode: .fit)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(notchTheme.primaryForeground.opacity(0.5))
                 .frame(
                     width: batteryWidth + 1
                 )
@@ -64,7 +65,7 @@ struct BatteryView: View {
                     Image(iconStatus)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .foregroundColor(.white)
+                        .foregroundColor(notchTheme.primaryForeground)
                         .frame(
                             width: 17,
                             height: 17
@@ -96,6 +97,7 @@ struct BatteryMenuView: View {
     var onDismiss: () -> Void
 
     @Environment(\.openURL) private var openURL
+    @Default(.notchTheme) private var notchTheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -143,7 +145,7 @@ struct BatteryMenuView: View {
             }
             .padding(.vertical, 8)
 
-            Divider().background(Color.white)
+            Divider().background(notchTheme.primaryForeground.opacity(0.25))
 
             Button(action: openBatteryPreferences) {
                 Label("Battery Settings", systemImage: "gearshape")
@@ -155,7 +157,7 @@ struct BatteryMenuView: View {
         }
         .padding()
         .frame(width: 280)
-        .foregroundColor(.white)
+        .foregroundColor(notchTheme.primaryForeground)
     }
 
     private func openBatteryPreferences() {
@@ -183,6 +185,7 @@ struct BoringBatteryView: View {
     @State private var isHoveringButton: Bool = false
     @State private var isHoveringPopover: Bool = false
     @State private var hideTask: Task<Void, Never>? = nil
+    @Default(.notchTheme) private var notchTheme
 
     @EnvironmentObject var vm: BoringViewModel
 
@@ -196,7 +199,7 @@ struct BoringBatteryView: View {
                 if Defaults[.showBatteryPercentage] {
                     Text("\(Int32(levelBattery))%")
                         .font(.callout)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(notchTheme.primaryForeground)
                 }
                 BatteryView(
                     levelBattery: levelBattery,

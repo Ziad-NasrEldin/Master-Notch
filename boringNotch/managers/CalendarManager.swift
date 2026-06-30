@@ -128,6 +128,25 @@ class CalendarManager: ObservableObject {
             print("Unknown authorization status")
         }
     }
+
+    func refreshReminderAuthorizationStatus() async {
+        let status = EKEventStore.authorizationStatus(for: .reminder)
+        reminderAuthorizationStatus = status
+        if status == .fullAccess {
+            await reloadCalendarAndReminderLists()
+        }
+    }
+
+    func requestReminderAuthorization() async {
+        guard let granted = try? await calendarService.requestAccess(to: .reminder) else {
+            reminderAuthorizationStatus = EKEventStore.authorizationStatus(for: .reminder)
+            return
+        }
+        reminderAuthorizationStatus = granted ? .fullAccess : .denied
+        if granted {
+            await reloadCalendarAndReminderLists()
+        }
+    }
         
 
     func updateSelectedCalendars() {

@@ -35,6 +35,7 @@ struct ContentView: View {
     @Namespace var albumArtNamespace
 
     @Default(.useMusicVisualizer) var useMusicVisualizer
+    @Default(.notchTheme) var notchTheme
 
     @Default(.showNotHumanFace) var showNotHumanFace
 
@@ -101,17 +102,17 @@ struct ContentView: View {
                         : cornerRadiusInsets.closed.bottom
                     )
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
-                    .background(.black)
+                    .background(notchTheme.background)
                     .clipShape(currentNotchShape)
                     .overlay(alignment: .top) {
                         Rectangle()
-                            .fill(.black)
+                            .fill(notchTheme.background)
                             .frame(height: 1)
                             .padding(.horizontal, topCornerRadius)
                     }
                     .shadow(
                         color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
-                            ? .black.opacity(0.7) : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
+                            ? notchTheme.shadow : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
                     )
                     .padding(
                         .bottom,
@@ -198,7 +199,7 @@ struct ContentView: View {
                     }
                 if vm.chinHeight > 0 {
                     Rectangle()
-                        .fill(Color.black.opacity(0.01))
+                        .fill(notchTheme.background.opacity(0.01))
                         .frame(width: computedChinWidth, height: vm.chinHeight)
                 }
             }
@@ -213,7 +214,7 @@ struct ContentView: View {
         )
         .animation(.smooth, value: gestureProgress)
         .background(dragDetector)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(notchTheme.preferredColorScheme)
         .environmentObject(vm)
         .onChange(of: vm.anyDropZoneTargeting) { _, isTargeted in
             anyDropDebounceTask?.cancel()
@@ -265,11 +266,11 @@ struct ContentView: View {
                             HStack {
                                 Text(batteryModel.statusText)
                                     .font(.subheadline)
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(notchTheme.primaryForeground)
                             }
 
                             Rectangle()
-                                .fill(.black)
+                                .fill(notchTheme.background)
                                 .frame(width: vm.closedNotchSize.width + 10)
 
                             HStack {
@@ -332,10 +333,10 @@ struct ContentView: View {
                                   HStack(alignment: .center) {
                                       Image(systemName: "music.note")
                                       GeometryReader { geo in
-                                          MarqueeText(.constant(musicManager.songTitle + " - " + musicManager.artistName),  textColor: Defaults[.playerColorTinting] ? Color(nsColor: musicManager.avgColor).ensureMinimumBrightness(factor: 0.6) : .gray, minDuration: 1, frameWidth: geo.size.width)
+                                          MarqueeText(.constant(musicManager.songTitle + " - " + musicManager.artistName),  textColor: Defaults[.playerColorTinting] && notchTheme == .black ? Color(nsColor: musicManager.avgColor).ensureMinimumBrightness(factor: 0.6) : notchTheme.secondaryForeground, minDuration: 1, frameWidth: geo.size.width)
                                       }
                                   }
-                                  .foregroundStyle(.gray)
+                                  .foregroundStyle(notchTheme.secondaryForeground)
                                   .padding(.bottom, 10)
                               }
                           }
@@ -376,7 +377,7 @@ struct ContentView: View {
         Text(timer.timeDisplay)
             .font(.system(size: 15, weight: .semibold, design: .rounded))
             .monospacedDigit()
-            .foregroundStyle(.white.opacity(timer.isRunning ? 0.94 : 0.62))
+            .foregroundStyle(notchTheme.primaryForeground.opacity(timer.isRunning ? 0.94 : 0.62))
             .frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight, alignment: .center)
             .contentTransition(.numericText())
             .animation(.smooth(duration: 0.2), value: timer.timeDisplay)
@@ -393,9 +394,9 @@ struct ContentView: View {
                         height: max(0, vm.effectiveClosedNotchHeight - 12)
                     )
                 Rectangle()
-                    .fill(.black)
+                    .fill(notchTheme.background)
                     .frame(width: vm.closedNotchSize.width - 20)
-                MinimalFaceFeatures()
+                MinimalFaceFeatures(color: notchTheme.primaryForeground)
             }
         }.frame(
             height: vm.effectiveClosedNotchHeight,
@@ -420,7 +421,7 @@ struct ContentView: View {
                 )
 
             Rectangle()
-                .fill(.black)
+                .fill(notchTheme.background)
                 .overlay(
                     HStack(alignment: .top) {
                         if coordinator.expandingView.show
@@ -429,7 +430,7 @@ struct ContentView: View {
                             MarqueeText(
                                 .constant(musicManager.songTitle),
                                 textColor: Defaults[.coloredSpectrogram]
-                                    ? Color(nsColor: musicManager.avgColor) : Color.gray,
+                                    ? Color(nsColor: musicManager.avgColor) : notchTheme.secondaryForeground,
                                 minDuration: 0.4,
                                 frameWidth: 100
                             )
@@ -446,7 +447,7 @@ struct ContentView: View {
                                 .foregroundStyle(
                                     Defaults[.coloredSpectrogram]
                                         ? Color(nsColor: musicManager.avgColor)
-                                        : Color.gray
+                                        : notchTheme.secondaryForeground
                                 )
                                 .opacity(
                                     (coordinator.expandingView.show
@@ -472,7 +473,7 @@ struct ContentView: View {
                         .fill(
                             Defaults[.coloredSpectrogram]
                                 ? Color(nsColor: musicManager.avgColor).gradient
-                                : Color.gray.gradient
+                                : notchTheme.secondaryForeground.gradient
                         )
                         .frame(width: 50, alignment: .center)
                         .matchedGeometryEffect(id: "spectrum", in: albumArtNamespace)
