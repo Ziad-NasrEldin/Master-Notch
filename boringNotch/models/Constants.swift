@@ -248,6 +248,13 @@ extension Defaults.Keys {
     static let showClosedNotchHUDPercentage = Key<Bool>("showClosedNotchHUDPercentage", default: false)
     // Option key modifier behaviour for media keys
     static let optionKeyAction = Key<OptionKeyAction>("optionKeyAction", default: OptionKeyAction.openSettings)
+
+    // MARK: Cursor Scale
+    static let cursorScaleActivationMode = Key<CursorScaleActivationMode>("cursorScaleActivationMode", default: .timed)
+    static let cursorScaleDuration = Key<Double>("cursorScaleDuration", default: 3.0)
+    static let cursorScaleAmount = Key<Double>("cursorScaleAmount", default: 4.0)
+    static let cursorScaleOwnedOriginalScale = Key<Double?>("cursorScaleOwnedOriginalScale", default: nil)
+    static let cursorScaleOwnedAppliedScale = Key<Double?>("cursorScaleOwnedAppliedScale", default: nil)
     
     // MARK: Shelf
     static let boringShelf = Key<Bool>("boringShelf", default: true)
@@ -267,11 +274,6 @@ extension Defaults.Keys {
     static let clipboardHistoryMaxItems = Key<Int>("clipboardHistoryMaxItems", default: 100)
     static let clipboardHistoryMaxStorageMB = Key<Int>("clipboardHistoryMaxStorageMB", default: 250)
 
-    // MARK: Cursor Scale
-    static let cursorScaleActivationMode = Key<CursorScaleActivationMode>("cursorScaleActivationMode", default: .timed)
-    static let cursorScaleDuration = Key<Double>("cursorScaleDuration", default: 3.0)
-    static let cursorScaleAmount = Key<Double>("cursorScaleAmount", default: 4.0)
-    
     // MARK: Calendar
     static let calendarSelectionState = Key<CalendarSelectionState>("calendarSelectionState", default: .all)
     static let hideAllDayEvents = Key<Bool>("hideAllDayEvents", default: false)

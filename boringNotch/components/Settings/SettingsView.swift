@@ -2058,6 +2058,7 @@ struct Shortcuts: View {
     @Default(.cursorScaleActivationMode) var cursorScaleActivationMode
     @Default(.cursorScaleDuration) var cursorScaleDuration
     @Default(.cursorScaleAmount) var cursorScaleAmount
+    @StateObject private var cursorScaleController = CursorScaleController.shared
 
     var body: some View {
         Form {
@@ -2086,11 +2087,13 @@ struct Shortcuts: View {
             }
             Section {
                 KeyboardShortcuts.Recorder("Enlarge Cursor:", name: .cursorScale)
+                    .disabled(!cursorScaleController.isAvailable)
                 Picker("Behavior", selection: $cursorScaleActivationMode) {
                     ForEach(CursorScaleActivationMode.allCases) { mode in
                         Text(mode.rawValue).tag(mode)
                     }
                 }
+                .disabled(!cursorScaleController.isAvailable)
                 .onChange(of: cursorScaleActivationMode) {
                     CursorScaleController.shared.restore()
                 }
@@ -2102,6 +2105,7 @@ struct Shortcuts: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                .disabled(!cursorScaleController.isAvailable || cursorScaleActivationMode != .timed)
                 Slider(value: $cursorScaleAmount, in: 1.5...8, step: 0.5) {
                     HStack {
                         Text("Cursor size")
@@ -2110,13 +2114,20 @@ struct Shortcuts: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                .disabled(!cursorScaleController.isAvailable)
                 Button("Restore cursor now") {
                     CursorScaleController.shared.restore()
+                }
+                .disabled(!cursorScaleController.canRestore)
+                if let message = cursorScaleController.statusMessage {
+                    Text(message)
+                        .foregroundStyle(cursorScaleController.isAvailable ? Color.secondary : Color.red)
+                        .font(.caption)
                 }
             } header: {
                 Text("Cursor")
             } footer: {
-                Text("Timed mode restores the cursor after the configured duration. Toggle mode keeps it enlarged until you press the shortcut again. Restore cursor now resets any stuck enlarged state.")
+                Text("Timed mode restores after the configured duration. Toggle mode keeps the cursor enlarged until you press the shortcut again. Restore only uses a saved exact pointer size and will not reset custom macOS pointer sizes to a default value.")
                     .multilineTextAlignment(.trailing)
                     .foregroundStyle(.secondary)
                     .font(.caption)

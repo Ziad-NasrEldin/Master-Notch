@@ -69,6 +69,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        CursorScaleController.shared.restore()
         NotificationCenter.default.removeObserver(self)
         if let observer = screenLockedObserver {
             DistributedNotificationCenter.default().removeObserver(observer)
@@ -555,6 +556,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+
+        CursorScaleController.shared.restorePersistedCursorIfSafe()
     }
 
     @objc func togglePopover(_ sender: Any?) {
