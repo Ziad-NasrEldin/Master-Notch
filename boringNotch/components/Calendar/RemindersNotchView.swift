@@ -192,6 +192,10 @@ struct RemindersNotchView: View {
                 .font(.caption)
                 .foregroundStyle(notchTheme.primaryForeground)
                 .focused($addFieldFocused)
+                .onTapGesture {
+                    NSApp.activate(ignoringOtherApps: true)
+                    addFieldFocused = true
+                }
                 .onSubmit(addReminder)
 
             Button(action: addReminder) {

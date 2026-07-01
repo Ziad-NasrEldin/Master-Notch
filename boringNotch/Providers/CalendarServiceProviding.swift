@@ -44,6 +44,15 @@ class CalendarService: CalendarServiceProviding {
     
     @MainActor
     func requestAccess(to type: EKEntityType) async throws -> Bool {
+        let status = EKEventStore.authorizationStatus(for: type)
+        if status == .fullAccess {
+            return true
+        }
+
+        guard status == .notDetermined else {
+            return false
+        }
+
         if #available(macOS 14.0, *) {
             switch type {
             case .event:

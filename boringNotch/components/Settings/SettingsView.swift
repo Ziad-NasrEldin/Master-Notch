@@ -480,6 +480,7 @@ struct HUD: View {
     @Default(.hudReplacement) var hudReplacement
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     @State private var accessibilityAuthorized = false
+    @State private var requestingAccessibility = false
     
     var body: some View {
         Form {
@@ -508,10 +509,16 @@ struct HUD: View {
                             .foregroundStyle(.secondary)
 
                         HStack(spacing: 12) {
-                            Button("Request Accessibility") {
-                                XPCHelperClient.shared.requestAccessibilityAuthorization()
+                            Button {
+                                requestAccessibility()
+                            } label: {
+                                Label(
+                                    requestingAccessibility ? "Opening Settings" : "Open Accessibility Settings",
+                                    systemImage: "figure.arms.open"
+                                )
                             }
                             .buttonStyle(.borderedProminent)
+                            .disabled(requestingAccessibility)
                         }
                     }
                     .padding(.top, 6)
@@ -587,6 +594,11 @@ struct HUD: View {
         .task {
             accessibilityAuthorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            Task {
+                accessibilityAuthorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
+            }
+        }
         .onAppear {
             XPCHelperClient.shared.startMonitoringAccessibilityAuthorization()
         }
@@ -596,6 +608,20 @@ struct HUD: View {
         .onReceive(NotificationCenter.default.publisher(for: .accessibilityAuthorizationChanged)) { notification in
             if let granted = notification.userInfo?["granted"] as? Bool {
                 accessibilityAuthorized = granted
+            }
+        }
+    }
+
+    private func requestAccessibility() {
+        requestingAccessibility = true
+        Task {
+            _ = await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true)
+            await XPCHelperClient.shared.openAccessibilitySettings()
+            try? await Task.sleep(for: .milliseconds(800))
+            let granted = await XPCHelperClient.shared.isAccessibilityAuthorized()
+            await MainActor.run {
+                accessibilityAuthorized = granted
+                requestingAccessibility = false
             }
         }
     }

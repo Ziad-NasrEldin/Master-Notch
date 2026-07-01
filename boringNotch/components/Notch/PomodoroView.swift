@@ -209,17 +209,18 @@ struct PomodoroView: View {
     @Default(.notchTheme) private var notchTheme
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .center, spacing: 14) {
             timerDial
-                .frame(width: 94, height: 94)
+                .frame(width: 82, height: 82)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 statusLine
                 controls
                 durationControls
             }
-            .frame(width: 260, alignment: .leading)
+            .frame(width: 236, alignment: .leading)
         }
+        .frame(width: 360, height: 128, alignment: .center)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(
@@ -237,11 +238,12 @@ struct PomodoroView: View {
     private var statusLine: some View {
         HStack(spacing: 7) {
             Image(systemName: phaseIcon)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(timer.accent)
+                .frame(width: 14, height: 14)
 
             Text(compactPhaseTitle)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(notchTheme.primaryForeground)
 
             Spacer(minLength: 0)
@@ -260,23 +262,23 @@ struct PomodoroView: View {
                 .fill(notchTheme.background.opacity(notchTheme == .white ? 0.78 : 0.42))
 
             Circle()
-                .stroke(notchTheme.secondaryForeground.opacity(0.18), lineWidth: 7)
+                .stroke(notchTheme.secondaryForeground.opacity(0.16), lineWidth: 5)
 
             Circle()
                 .trim(from: 0, to: max(timer.progress, timer.phase == .complete ? 1 : 0.018))
-                .stroke(timer.accent, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .stroke(timer.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.smooth(duration: 0.35), value: timer.progress)
 
             Text(timer.timeDisplay)
-                .font(.system(size: 25, weight: .semibold))
+                .font(.system(size: 22, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(notchTheme.primaryForeground)
         }
     }
 
     private var durationControls: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
             minuteStepper(title: "Focus", value: timer.workMinutes, range: 1...180) { timer.setWorkMinutes($0) }
             minuteStepper(title: "Break", value: timer.breakMinutes, range: 1...60) { timer.setBreakMinutes($0) }
         }
@@ -287,11 +289,13 @@ struct PomodoroView: View {
             Text(title)
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(notchTheme.secondaryForeground)
+                .lineLimit(1)
 
             Text("\(value)m")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(notchTheme.primaryForeground)
                 .monospacedDigit()
+                .lineLimit(1)
 
             Spacer(minLength: 0)
 
@@ -305,13 +309,14 @@ struct PomodoroView: View {
         .padding(.leading, 8)
         .padding(.trailing, 4)
         .padding(.vertical, 5)
+        .frame(maxWidth: .infinity)
         .background(
-            notchTheme.background.opacity(notchTheme == .white ? 0.72 : 0.38),
-            in: RoundedRectangle(cornerRadius: 11, style: .continuous)
+            notchTheme.background.opacity(notchTheme == .white ? 0.58 : 0.28),
+            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(notchTheme.secondaryForeground.opacity(0.14), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(notchTheme.secondaryForeground.opacity(0.12), lineWidth: 1)
         )
     }
 
@@ -319,7 +324,7 @@ struct PomodoroView: View {
         HStack(spacing: 8) {
             Button(action: timer.togglePrimaryAction) {
                 Label(timer.primaryButtonTitle, systemImage: timer.primaryButtonIcon)
-                    .frame(width: 112)
+                    .frame(width: 104)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
@@ -328,7 +333,7 @@ struct PomodoroView: View {
             Button(action: timer.skipPhase) {
                 Label(skipTitle, systemImage: "forward.end.fill")
                     .labelStyle(.iconOnly)
-                    .frame(width: 28)
+                    .frame(width: 26)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
@@ -337,7 +342,7 @@ struct PomodoroView: View {
             Button(action: timer.resetToIdle) {
                 Label("Reset", systemImage: "arrow.counterclockwise")
                     .labelStyle(.iconOnly)
-                    .frame(width: 28)
+                    .frame(width: 26)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)

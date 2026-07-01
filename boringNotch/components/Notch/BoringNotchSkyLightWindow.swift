@@ -109,6 +109,9 @@ class BoringNotchSkyLightWindow: NSPanel {
     
     private var observers: Set<AnyCancellable> = []
     
-    override var canBecomeKey: Bool { false }
+    // The notch contains interactive controls (for example the Reminders add field).
+    // Keep it non-main/non-activating, but allow key status after an explicit click so
+    // SwiftUI text fields can receive keyboard input.
+    override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 }

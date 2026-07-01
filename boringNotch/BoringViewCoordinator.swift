@@ -293,8 +293,14 @@ class BoringViewCoordinator: ObservableObject {
             }
         }
     }
+
+    func selectTab(_ view: NotchViews) {
+        withAnimation(.smooth) {
+            currentView = view
+        }
+    }
     
     func showEmpty() {
-        currentView = .home
+        selectTab(.home)
     }
 }
