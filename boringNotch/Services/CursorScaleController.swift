@@ -23,9 +23,9 @@ final class CursorScaleController: ObservableObject {
     }
 
     private enum CursorScaleError: String {
-        case unsupported = "Boring Notch cannot read and set the macOS cursor size on this version, so the cursor shortcut is disabled."
-        case readFailed = "Boring Notch could not read your current cursor size, so it did not change the cursor."
-        case unsafeRestore = "Boring Notch did not restore the cursor because the current pointer size no longer matches the size it applied."
+        case unsupported = "minitap cannot read and set the macOS cursor size on this version, so the cursor shortcut is disabled."
+        case readFailed = "minitap could not read your current cursor size, so it did not change the cursor."
+        case unsafeRestore = "minitap did not restore the cursor because the current pointer size no longer matches the size it applied."
     }
 
     private let setScale: UACursorSetScale?
@@ -50,7 +50,7 @@ final class CursorScaleController: ObservableObject {
         }
 
         if hasPersistedRestore {
-            return "A previous cursor enlargement is pending restore. Restore is available only while the current pointer size still matches Boring Notch's enlarged value."
+            return "A previous cursor enlargement is pending restore. Restore is available only while the current pointer size still matches minitap's enlarged value."
         }
 
         return nil

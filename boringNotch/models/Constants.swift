@@ -150,7 +150,7 @@ extension Defaults.Keys {
     static let menubarIcon = Key<Bool>("menubarIcon", default: true)
     static let showOnAllDisplays = Key<Bool>("showOnAllDisplays", default: false)
     static let automaticallySwitchDisplay = Key<Bool>("automaticallySwitchDisplay", default: true)
-    static let releaseName = Key<String>("releaseName", default: "Flying Rabbit 🐇🪽")
+    static let releaseName = Key<String>("releaseName", default: "Master Notch")
     
     // MARK: Behavior
     static let minimumHoverDuration = Key<TimeInterval>("minimumHoverDuration", default: 0.3)
@@ -208,12 +208,6 @@ extension Defaults.Keys {
     static let waitInterval = Key<Double>("waitInterval", default: 3)
     static let showShuffleAndRepeat = Key<Bool>("showShuffleAndRepeat", default: false)
     static let enableLyrics = Key<Bool>("enableLyrics", default: false)
-    static let spotifyAdDampenerEnabled = Key<Bool>("spotifyAdDampenerEnabled", default: false)
-    static let spotifyAdDampenerTargetVolume = Key<Double>("spotifyAdDampenerTargetVolume", default: 0.08)
-    static let spotifyAdDampenerManualCallSuppress = Key<Bool>("spotifyAdDampenerManualCallSuppress", default: false)
-    static let spotifyAdDampenerOwnedSessionID = Key<String?>("spotifyAdDampenerOwnedSessionID", default: nil)
-    static let spotifyAdDampenerOwnedSavedVolume = Key<Double?>("spotifyAdDampenerOwnedSavedVolume", default: nil)
-    static let spotifyAdDampenerOwnedStartedAt = Key<Date?>("spotifyAdDampenerOwnedStartedAt", default: nil)
     static let pomodoroWorkMinutes = Key<Int>("pomodoroWorkMinutes", default: 25)
     static let pomodoroBreakMinutes = Key<Int>("pomodoroBreakMinutes", default: 5)
     static let musicControlSlots = Key<[MusicControlButton]>(

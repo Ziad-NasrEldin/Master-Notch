@@ -12,7 +12,7 @@
 
 ## Local Contracts
 
-- Key local files: CallGuardService.swift, CursorScaleController.swift, SpotifyAdMonitor.swift, SpotifyAuthConfiguration.swift, SpotifyAuthService.swift, SpotifyPlaybackAPI.swift.
+- Key local files: CursorScaleController.swift.
 - Preserve public interfaces, route names, data shapes, and documented workflows unless the task explicitly changes them.
 
 ## Work Guidance
