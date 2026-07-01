@@ -29,25 +29,23 @@ struct TabSelectionView: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(tabs) { tab in
-                    TabButton(label: tab.label, icon: tab.icon, selected: coordinator.currentView == tab.view) {
-                        withAnimation(.smooth) {
-                            coordinator.currentView = tab.view
-                        }
+                TabButton(label: tab.label, icon: tab.icon, selected: coordinator.currentView == tab.view) {
+                    coordinator.selectTab(tab.view)
+                }
+                .frame(height: 26)
+                .foregroundStyle(tab.view == coordinator.currentView ? notchTheme.primaryForeground : notchTheme.secondaryForeground)
+                .background {
+                    if tab.view == coordinator.currentView {
+                        Capsule()
+                            .fill(coordinator.currentView == tab.view ? notchTheme.selectedTabBackground : Color.clear)
+                            .matchedGeometryEffect(id: "capsule", in: animation)
+                    } else {
+                        Capsule()
+                            .fill(coordinator.currentView == tab.view ? notchTheme.selectedTabBackground : Color.clear)
+                            .matchedGeometryEffect(id: "capsule", in: animation)
+                            .hidden()
                     }
-                    .frame(height: 26)
-                    .foregroundStyle(tab.view == coordinator.currentView ? notchTheme.primaryForeground : notchTheme.secondaryForeground)
-                    .background {
-                        if tab.view == coordinator.currentView {
-                            Capsule()
-                                .fill(coordinator.currentView == tab.view ? notchTheme.selectedTabBackground : Color.clear)
-                                .matchedGeometryEffect(id: "capsule", in: animation)
-                        } else {
-                            Capsule()
-                                .fill(coordinator.currentView == tab.view ? notchTheme.selectedTabBackground : Color.clear)
-                                .matchedGeometryEffect(id: "capsule", in: animation)
-                                .hidden()
-                        }
-                    }
+                }
             }
         }
         .clipShape(Capsule())

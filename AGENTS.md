@@ -87,7 +87,7 @@ Default section order:
 ## Project Context
 
 - Project: minitap.
-- Repository root: `boring.notch`.
+- Repository root: `Master-Notch`.
 - The app's external brand and technical identity are minitap.
 - This DOX index is generated from stable source, docs, and config paths only.
 - Private files, local environment files, dependency folders, build outputs, caches, and binary asset dumps are intentionally excluded from the DOX tree.

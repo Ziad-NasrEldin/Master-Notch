@@ -54,6 +54,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var onboardingWindowController: NSWindowController?
     private var screenLockedObserver: Any?
     private var screenUnlockedObserver: Any?
+    private var tabShortcutMonitor: Any?
     private var isScreenLocked: Bool = false
     private var windowScreenDidChangeObserver: Any?
     private var dragDetectors: [String: DragDetector] = [:] // UUID -> DragDetector
@@ -78,6 +79,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let observer = screenUnlockedObserver {
             DistributedNotificationCenter.default().removeObserver(observer)
             screenUnlockedObserver = nil
+        }
+        if let monitor = tabShortcutMonitor {
+            NSEvent.removeMonitor(monitor)
+            tabShortcutMonitor = nil
         }
         MusicManager.shared.destroy()
         SpotifyAdDampenerManager.shared.stopAndRestore()
@@ -229,10 +234,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         if Defaults[.showOnAllDisplays], let viewModel = viewModels[uuid] {
             viewModel.open()
-            coordinator.currentView = .shelf
+            coordinator.selectTab(.shelf)
         } else if !Defaults[.showOnAllDisplays], let windowScreen = window?.screen, screen == windowScreen {
             vm.open()
-            coordinator.currentView = .shelf
+            coordinator.selectTab(.shelf)
+        }
+    }
+
+    private func registerTabShortcuts() {
+        tabShortcutMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return event }
+            guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command else {
+                return event
+            }
+
+            let view: NotchViews?
+            switch event.charactersIgnoringModifiers {
+            case "1":
+                view = .home
+            case "2":
+                view = .shelf
+            case "3":
+                view = .pomodoro
+            case "4":
+                view = .reminders
+            default:
+                view = nil
+            }
+
+            guard let view else { return event }
+            Task { @MainActor in
+                self.coordinator.selectTab(view)
+            }
+            return nil
         }
     }
 
@@ -288,6 +322,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             ClipboardHistoryViewModel.shared.start()
         }
+        registerTabShortcuts()
 
         NotificationCenter.default.addObserver(
             self,
@@ -448,6 +483,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         {
             DispatchQueue.main.async {
                 self.showOnboardingWindow(step: .musicPermission)
+            }
+        }
+
+        if ProcessInfo.processInfo.arguments.contains("--show-settings") {
+            DispatchQueue.main.async {
+                SettingsWindowController.shared.showWindow()
             }
         }
 
