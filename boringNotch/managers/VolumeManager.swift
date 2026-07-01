@@ -73,6 +73,20 @@ final class VolumeManager: NSObject, ObservableObject {
     
     func refresh() { fetchCurrentVolume() }
 
+    func spotifyAdDampenerCurrentVolume() -> Float32? {
+        readVolumeInternal()
+    }
+
+    @MainActor func spotifyAdDampenerSetVolume(_ value: Float32) {
+        let clamped = max(0, min(1, value))
+        let currentlyMuted = isMutedInternal()
+        if currentlyMuted && clamped > 0 {
+            toggleMuteInternal()
+        }
+        writeVolumeInternal(clamped)
+        publish(volume: clamped, muted: isMutedInternal(), touchDate: false)
+    }
+
     func adjustRelative(delta: Float32) {
         if isMutedInternal() { toggleMuteInternal() }
         guard let current = readVolumeInternal() else {
@@ -374,4 +388,3 @@ final class VolumeManager: NSObject, ObservableObject {
 extension Array where Element == Float32 {
     fileprivate var average: Float32? { isEmpty ? nil : reduce(0, +) / Float32(count) }
 }
-

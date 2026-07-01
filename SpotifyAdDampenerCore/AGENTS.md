@@ -2,17 +2,17 @@
 
 ## Purpose
 
-- This subtree owns the managers area for `boringNotch/managers`.
+- This subtree owns the SpotifyAdDampenerCore area for `SpotifyAdDampenerCore`.
 - Keep this file current when responsibilities, contracts, or child docs change.
 
 ## Ownership
 
-- Applies to every file under `boringNotch/managers` unless a deeper AGENTS.md overrides it.
+- Applies to every file under `SpotifyAdDampenerCore` unless a deeper AGENTS.md overrides it.
 - Parent instructions from the repository root remain binding.
 
 ## Local Contracts
 
-- Key local files: BatteryActivityManager.swift, BrightnessManager.swift, CalendarManager.swift, ImageService.swift, MusicManager.swift, NotchSpaceManager.swift, SpotifyAdDampenerManager.swift, VolumeManager.swift, WebcamManager.swift.
+- Key local files: Package.swift.
 - Preserve public interfaces, route names, data shapes, and documented workflows unless the task explicitly changes them.
 
 ## Work Guidance
@@ -27,4 +27,4 @@
 
 ## Child DOX Index
 
-- No child AGENTS.md files yet.
+- [Tests](Tests/AGENTS.md) - automated tests.

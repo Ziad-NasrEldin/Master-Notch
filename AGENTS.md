@@ -111,3 +111,4 @@ Default section order:
 - [BoringNotchXPCHelper](BoringNotchXPCHelper/AGENTS.md) - the BoringNotchXPCHelper area.
 - [Configuration](Configuration/AGENTS.md) - the Configuration area.
 - [mediaremote-adapter](mediaremote-adapter/AGENTS.md) - the mediaremote-adapter area.
+- [SpotifyAdDampenerCore](SpotifyAdDampenerCore/AGENTS.md) - the SpotifyAdDampenerCore area.

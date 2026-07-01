@@ -27,6 +27,7 @@ struct DynamicNotchApp: App {
 
         // Initialize the settings window controller with the updater controller
         SettingsWindowController.shared.setUpdaterController(updaterController)
+        _ = SpotifyAdDampenerManager.shared
     }
 
     var body: some Scene {
@@ -62,6 +63,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return false
     }
 
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls {
+            SpotifyAdDampenerManager.shared.handleCallbackURL(url)
+        }
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         CursorScaleController.shared.restore()
         NotificationCenter.default.removeObserver(self)
@@ -78,6 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             tabShortcutMonitor = nil
         }
         MusicManager.shared.destroy()
+        SpotifyAdDampenerManager.shared.stopAndRestore()
         CursorScaleController.shared.restore()
         ClipboardHistoryStore.shared.flushPendingSaves()
         if Defaults[.clipboardHistoryClearOnQuit] {
