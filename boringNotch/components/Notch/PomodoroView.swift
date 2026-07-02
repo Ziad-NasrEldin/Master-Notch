@@ -207,14 +207,16 @@ final class PomodoroTimerModel: ObservableObject {
 struct PomodoroView: View {
     @ObservedObject private var timer = PomodoroTimerModel.shared
     @Default(.notchTheme) private var notchTheme
+    private let leftPaneLeadingInset: CGFloat = 12
 
     var body: some View {
-        HStack(alignment: .center, spacing: 20) {
+        HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
                 statusLine
                 timerReadout
                 progressBar
             }
+            .padding(.leading, leftPaneLeadingInset)
             .frame(width: 250, alignment: .leading)
             .layoutPriority(1)
 
@@ -265,7 +267,7 @@ struct PomodoroView: View {
                     .frame(width: progressWidth(in: geometry.size.width))
             }
         }
-        .frame(width: 240, height: 4)
+        .frame(width: 240 - leftPaneLeadingInset, height: 4)
         .animation(.smooth(duration: 0.35), value: timer.progress)
     }
 
