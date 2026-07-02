@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import Defaults
 
 enum OnboardingStep {
     case welcome
@@ -22,6 +23,8 @@ private let calendarService = CalendarService()
 
 struct OnboardingView: View {
     @State var step: OnboardingStep = .welcome
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
     let onFinish: () -> Void
     let onOpenSettings: () -> Void
 
@@ -140,6 +143,10 @@ struct OnboardingView: View {
             }
         }
         .frame(width: 400, height: 600)
+        .effectiveAccentColor(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
     }
 
     // MARK: - Permission Request Logic
@@ -157,6 +164,12 @@ struct OnboardingView: View {
     }
     
     func requestAccessibilityPermission() async {
-        await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true)
+        Defaults[.hudReplacement] = true
+        let granted = await XPCHelperClient.shared.ensureAccessibilityAuthorization(promptIfNeeded: true)
+        if granted {
+            await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
+        } else {
+            XPCHelperClient.shared.startMonitoringAccessibilityAuthorization()
+        }
     }
 }

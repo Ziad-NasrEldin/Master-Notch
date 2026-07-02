@@ -131,7 +131,7 @@ enum NotchTheme: String, CaseIterable, Identifiable, Defaults.Serializable {
         case .black:
             return .black.opacity(0.7)
         case .white:
-            return .black.opacity(0.16)
+            return .black.opacity(0.08)
         }
     }
 
@@ -177,6 +177,7 @@ extension Defaults.Keys {
     static let showMirror = Key<Bool>("showMirror", default: false)
     static let mirrorShape = Key<MirrorShapeEnum>("mirrorShape", default: MirrorShapeEnum.rectangle)
     static let settingsIconInNotch = Key<Bool>("settingsIconInNotch", default: true)
+    static let minimalNotchMode = Key<Bool>("minimalNotchMode", default: false)
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
     static let cornerRadiusScaling = Key<Bool>("cornerRadiusScaling", default: true)

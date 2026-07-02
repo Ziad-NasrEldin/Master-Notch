@@ -15,7 +15,19 @@ struct ShelfView: View {
     @StateObject var selection = ShelfSelectionModel.shared
     @StateObject private var quickLookService = QuickLookService()
     @Default(.notchTheme) private var notchTheme
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
+    let availableSize: CGSize?
     private let spacing: CGFloat = 8
+    private var expandedContentInsets: EdgeInsets {
+        availableSize == nil
+            ? EdgeInsets()
+            : EdgeInsets(top: 14, leading: 0, bottom: 8, trailing: 0)
+    }
+
+    init(availableSize: CGSize? = nil) {
+        self.availableSize = availableSize
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -32,6 +44,12 @@ struct ShelfView: View {
             updateQuickLookSelection()
         }
         .quickLookPresenter(using: quickLookService)
+        .padding(expandedContentInsets)
+        .frame(width: availableSize?.width, height: availableSize?.height, alignment: .center)
+        .effectiveAccentColor(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
     }
     
     private func handleDrop(providers: [NSItemProvider]) -> Bool {
@@ -64,7 +82,7 @@ struct ShelfView: View {
         RoundedRectangle(cornerRadius: 16)
             .stroke(
                 vm.dragDetectorTargeting
-                    ? Color.accentColor.opacity(0.9)
+                    ? Color.effectiveAccent.opacity(0.9)
                     : notchTheme.secondaryForeground.opacity(0.14),
                 style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
             )

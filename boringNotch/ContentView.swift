@@ -37,6 +37,9 @@ struct ContentView: View {
 
     @Default(.useMusicVisualizer) var useMusicVisualizer
     @Default(.notchTheme) var notchTheme
+    @Default(.minimalNotchMode) var minimalNotchMode
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
 
     @Default(.showNotHumanFace) var showNotHumanFace
 
@@ -45,6 +48,23 @@ struct ContentView: View {
 
     private let extendedHoverPadding: CGFloat = 30
     private let zeroHeightHoverPadding: CGFloat = 10
+
+    private var openShellHorizontalPadding: CGFloat {
+        Defaults[.cornerRadiusScaling]
+            ? cornerRadiusInsets.opened.top
+            : cornerRadiusInsets.opened.bottom
+    }
+
+    private var openShellContentSize: CGSize {
+        CGSize(
+            width: max(0, openNotchSize.width - (openShellHorizontalPadding * 2) - 24),
+            height: max(0, openNotchSize.height - 12)
+        )
+    }
+
+    private var minimalSectionSize: CGSize? {
+        minimalNotchMode ? openShellContentSize : nil
+    }
 
     private var topCornerRadius: CGFloat {
        ((vm.notchState == .open) && Defaults[.cornerRadiusScaling])
@@ -59,6 +79,27 @@ struct ContentView: View {
                 ? cornerRadiusInsets.opened.bottom
                 : cornerRadiusInsets.closed.bottom
         )
+    }
+
+    private var notchShellShadowColor: Color {
+        guard (vm.notchState == .open || isHovering) && Defaults[.enableShadow] else {
+            return .clear
+        }
+
+        switch notchTheme {
+        case .black:
+            return notchTheme.shadow
+        case .white:
+            return .black.opacity(0.035)
+        }
+    }
+
+    private var notchShellShadowRadius: CGFloat {
+        notchTheme == .white ? 18 : (Defaults[.cornerRadiusScaling] ? 6 : 4)
+    }
+
+    private var notchShellShadowYOffset: CGFloat {
+        notchTheme == .white ? 5 : 0
     }
 
     private var computedChinWidth: CGFloat {
@@ -94,15 +135,22 @@ struct ContentView: View {
         ZStack(alignment: .top) {
             VStack(spacing: 0) {
                 let mainLayout = NotchLayout()
-                    .frame(alignment: .top)
+                    .frame(
+                        width: vm.notchState == .open ? openShellContentSize.width : nil,
+                        height: vm.notchState == .open ? openShellContentSize.height : nil,
+                        alignment: .top
+                    )
                     .padding(
                         .horizontal,
-                        vm.notchState == .open
-                        ? Defaults[.cornerRadiusScaling]
-                        ? (cornerRadiusInsets.opened.top) : (cornerRadiusInsets.opened.bottom)
+                        vm.notchState == .open ? openShellHorizontalPadding
                         : cornerRadiusInsets.closed.bottom
                     )
                     .padding([.horizontal, .bottom], vm.notchState == .open ? 12 : 0)
+                    .frame(
+                        width: vm.notchState == .open ? vm.notchSize.width : nil,
+                        height: vm.notchState == .open ? vm.notchSize.height : nil,
+                        alignment: .top
+                    )
                     .background(notchTheme.background)
                     .clipShape(currentNotchShape)
                     .overlay(alignment: .top) {
@@ -112,8 +160,9 @@ struct ContentView: View {
                             .padding(.horizontal, topCornerRadius)
                     }
                     .shadow(
-                        color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
-                            ? notchTheme.shadow : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
+                        color: notchShellShadowColor,
+                        radius: notchShellShadowRadius,
+                        y: notchShellShadowYOffset
                     )
                     .padding(
                         .bottom,
@@ -247,8 +296,8 @@ struct ContentView: View {
 
     @ViewBuilder
     func NotchLayout() -> some View {
-        VStack(alignment: .leading) {
-            VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 0) {
                 if coordinator.helloAnimationRunning {
                     Spacer()
                     HelloAnimation(onFinish: {
@@ -300,12 +349,14 @@ struct ContentView: View {
                       } else if !coordinator.expandingView.show && vm.notchState == .closed && (!musicManager.isPlaying && musicManager.isPlayerIdle) && Defaults[.showNotHumanFace] && !vm.hideOnClosed  {
                           BoringFaceAnimation()
                        } else if vm.notchState == .open {
-                           BoringHeader()
-                               .frame(height: max(24, vm.effectiveClosedNotchHeight))
-                               .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
-                       } else {
-                           Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
-                       }
+                            if !minimalNotchMode {
+                                BoringHeader()
+                                    .frame(height: max(24, vm.effectiveClosedNotchHeight))
+                                    .opacity(gestureProgress != 0 ? 1.0 - min(abs(gestureProgress) * 0.1, 0.3) : 1.0)
+                            }
+                        } else {
+                            Rectangle().fill(.clear).frame(width: vm.closedNotchSize.width - 20, height: vm.effectiveClosedNotchHeight)
+                        }
 
                       if coordinator.sneakPeek.show {
                           if (coordinator.sneakPeek.type != .music) && (coordinator.sneakPeek.type != .battery) && !Defaults[.inlineHUD] && vm.notchState == .closed {
@@ -350,17 +401,21 @@ struct ContentView: View {
               }
               .zIndex(2)
             if vm.notchState == .open {
-                VStack {
+                VStack(alignment: .leading, spacing: 0) {
                     switch coordinator.currentView {
                     case .home:
-                        NotchHomeView(albumArtNamespace: albumArtNamespace)
+                        NotchHomeView(albumArtNamespace: albumArtNamespace, availableSize: minimalSectionSize)
                     case .shelf:
-                        ShelfView()
+                        ShelfView(availableSize: minimalSectionSize)
                     case .pomodoro:
-                        PomodoroView()
+                        PomodoroView(availableSize: minimalSectionSize)
                     case .reminders:
-                        RemindersNotchView()
+                        RemindersNotchView(availableSize: minimalSectionSize)
                     }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .conditionalModifier(minimalNotchMode) { view in
+                    view.frame(width: openShellContentSize.width, height: openShellContentSize.height, alignment: .topLeading)
                 }
                 .transition(
                     .scale(scale: 0.8, anchor: .top)
@@ -373,6 +428,10 @@ struct ContentView: View {
             }
         }
         .onDrop(of: [.fileURL, .url, .utf8PlainText, .plainText, .data], delegate: GeneralDropTargetDelegate(isTargeted: $vm.generalDropTargeting))
+        .effectiveAccentColor(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
     }
 
     @ViewBuilder

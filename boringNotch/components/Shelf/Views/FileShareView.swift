@@ -14,11 +14,23 @@ struct FileShareView: View {
     @EnvironmentObject private var vm: BoringViewModel
     @StateObject private var quickShare = QuickShareService.shared
     @Default(.quickShareProvider) var quickShareProvider: String
+    @Default(.notchTheme) var notchTheme
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
 
     @State private var hostView: NSView?
     @State private var interactionNonce: UUID = .init()
     @State private var isProcessing = false
-    
+
+    private var dropAreaShadow: (color: Color, radius: CGFloat, y: CGFloat) {
+        switch notchTheme {
+        case .black:
+            return (Color.black.opacity(0.6), 6, 2)
+        case .white:
+            return (Color.black.opacity(0.16), 4, 1)
+        }
+    }
+
     private var selectedProvider: QuickShareProvider {
         quickShare.availableProviders.first(where: { $0.id == quickShareProvider }) ?? QuickShareProvider(id: "System Share Menu", imageData: nil, supportsRawText: true)
     }
@@ -37,6 +49,10 @@ struct FileShareView: View {
                     await handleClick()
                 }
             }
+            .effectiveAccentColor(
+                useCustomAccentColor: useCustomAccentColor,
+                customAccentColorData: customAccentColorData
+            )
     }
 
     private var dropArea: some View {
@@ -49,12 +65,17 @@ struct FileShareView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
                             vm.dropZoneTargeting
-                                ? Color.accentColor.opacity(0.9)
+                                ? Color.effectiveAccent.opacity(0.9)
                                 : Color.white.opacity(0.1),
                             style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
                         )
                 )
-                .shadow(color: Color.black.opacity(0.6), radius: 6, x: 0, y: 2)
+                .shadow(
+                    color: dropAreaShadow.color,
+                    radius: dropAreaShadow.radius,
+                    x: 0,
+                    y: dropAreaShadow.y
+                )
 
             // Content
             VStack(spacing: 5) {
@@ -76,7 +97,7 @@ struct FileShareView: View {
                     }
                     .frame(width: 34, height: 34)
                         .foregroundStyle(
-                            vm.dropZoneTargeting ? Color.accentColor : Color.gray
+                            vm.dropZoneTargeting ? Color.effectiveAccent : Color.gray
                         )
                         .scaleEffect(
                             vm.dropZoneTargeting ? 1.06 : 1.0

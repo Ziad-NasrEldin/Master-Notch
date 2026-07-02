@@ -129,8 +129,15 @@ class BoringViewCoordinator: ObservableObject {
             queue: .main
         ) { _ in
             Task { @MainActor in
-                if Defaults[.hudReplacement] {
+                guard Defaults[.hudReplacement] else { return }
+
+                let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
+                if authorized {
+                    XPCHelperClient.shared.stopMonitoringAccessibilityAuthorization()
                     await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
+                } else {
+                    MediaKeyInterceptor.shared.stop()
+                    XPCHelperClient.shared.startMonitoringAccessibilityAuthorization()
                 }
             }
         }
@@ -150,13 +157,16 @@ class BoringViewCoordinator: ObservableObject {
                             if Task.isCancelled { return }
 
                             if granted {
-                                await MediaKeyInterceptor.shared.start()
+                                XPCHelperClient.shared.stopMonitoringAccessibilityAuthorization()
+                                await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
                             } else {
-                                Defaults[.hudReplacement] = false
+                                MediaKeyInterceptor.shared.stop()
+                                XPCHelperClient.shared.startMonitoringAccessibilityAuthorization()
                             }
                         }
                     } else {
                         MediaKeyInterceptor.shared.stop()
+                        XPCHelperClient.shared.stopMonitoringAccessibilityAuthorization()
                     }
                 }
             }
@@ -166,10 +176,12 @@ class BoringViewCoordinator: ObservableObject {
 
             if Defaults[.hudReplacement] {
                 let authorized = await XPCHelperClient.shared.isAccessibilityAuthorized()
-                if !authorized {
-                    Defaults[.hudReplacement] = false
-                } else {
+                if authorized {
+                    XPCHelperClient.shared.stopMonitoringAccessibilityAuthorization()
                     await MediaKeyInterceptor.shared.start(promptIfNeeded: false)
+                } else {
+                    MediaKeyInterceptor.shared.stop()
+                    XPCHelperClient.shared.startMonitoringAccessibilityAuthorization()
                 }
             }
         }
