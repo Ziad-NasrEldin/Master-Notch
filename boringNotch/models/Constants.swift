@@ -131,7 +131,7 @@ enum NotchTheme: String, CaseIterable, Identifiable, Defaults.Serializable {
         case .black:
             return .black.opacity(0.7)
         case .white:
-            return .black.opacity(0.16)
+            return .black.opacity(0.08)
         }
     }
 
