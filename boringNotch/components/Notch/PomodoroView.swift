@@ -209,24 +209,20 @@ struct PomodoroView: View {
     @Default(.notchTheme) private var notchTheme
 
     var body: some View {
-        HStack(alignment: .center, spacing: 28) {
+        HStack(alignment: .center, spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
                 statusLine
                 timerReadout
                 progressBar
             }
-            .frame(width: 278, alignment: .leading)
+            .frame(width: 250, alignment: .leading)
+            .layoutPriority(1)
 
             Spacer(minLength: 0)
 
-            VStack(alignment: .trailing, spacing: 17) {
-                controls
-                durationControls
-            }
-            .frame(width: 238, alignment: .trailing)
+            rightRail
         }
-        .frame(width: 560, height: 126, alignment: .center)
-        .padding(.horizontal, 24)
+        .frame(width: 540, height: 126, alignment: .center)
         .padding(.vertical, 8)
         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
     }
@@ -269,12 +265,23 @@ struct PomodoroView: View {
                     .frame(width: progressWidth(in: geometry.size.width))
             }
         }
-        .frame(width: 256, height: 4)
+        .frame(width: 240, height: 4)
         .animation(.smooth(duration: 0.35), value: timer.progress)
     }
 
+    private var rightRail: some View {
+        ZStack {
+            controls
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+
+            durationControls
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        }
+        .frame(width: 256, height: 126, alignment: .center)
+    }
+
     private var durationControls: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 8) {
             durationAdjuster(title: "Focus", value: timer.workMinutes, range: 1...180) {
                 timer.setWorkMinutes($0)
             }
@@ -289,13 +296,14 @@ struct PomodoroView: View {
             Text(title)
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(notchTheme.secondaryForeground)
+                .frame(width: 32, alignment: .leading)
                 .lineLimit(1)
 
             Text("\(value)m")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(notchTheme.primaryForeground)
                 .monospacedDigit()
-                .frame(minWidth: 32, alignment: .trailing)
+                .frame(width: 34, alignment: .trailing)
                 .lineLimit(1)
 
             Button {
@@ -303,7 +311,7 @@ struct PomodoroView: View {
             } label: {
                 Image(systemName: "minus")
                     .font(.system(size: 9, weight: .bold))
-                    .frame(width: 15, height: 15)
+                    .frame(width: 14, height: 15)
             }
             .buttonStyle(.plain)
             .foregroundStyle(notchTheme.secondaryForeground)
@@ -315,14 +323,15 @@ struct PomodoroView: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.system(size: 9, weight: .bold))
-                    .frame(width: 15, height: 15)
+                    .frame(width: 14, height: 15)
             }
             .buttonStyle(.plain)
             .foregroundStyle(notchTheme.secondaryForeground)
             .help("Increase \(title.lowercased())")
             .disabled(value >= range.upperBound)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 6)
+        .frame(width: 124, alignment: .center)
         .frame(height: 28)
         .background(
             notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 0.86 : 0.52),
