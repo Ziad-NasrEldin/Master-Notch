@@ -26,8 +26,8 @@ struct ClipboardHistoryPanelView: View {
             VStack(spacing: 0) {
                 header
                     .padding(.horizontal, 18)
-                    .padding(.top, 18)
-                    .padding(.bottom, 12)
+                    .padding(.top, 14)
+                    .padding(.bottom, 8)
 
                 if historyEnabled {
                     activeContent
@@ -49,25 +49,24 @@ struct ClipboardHistoryPanelView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 8) {
                 Image(systemName: "doc.on.clipboard")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.primary)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 18, height: 18)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Clipboard")
-                        .font(.system(size: 22, weight: .semibold, design: .default))
-                        .foregroundStyle(.primary)
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(viewModel.isMonitoring ? Color.green : Color.orange)
-                            .frame(width: 7, height: 7)
-                        Text(viewModel.statusText)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
-                    }
+                Text("Clipboard")
+                    .font(.system(size: 20, weight: .semibold, design: .default))
+                    .foregroundStyle(.primary)
+
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(viewModel.isMonitoring ? Color.green : Color.orange)
+                        .frame(width: 6, height: 6)
+                    Text(viewModel.statusText)
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -78,7 +77,7 @@ struct ClipboardHistoryPanelView: View {
                     } label: {
                         Image(systemName: viewModel.isUserPaused ? "play.fill" : "pause.fill")
                             .font(.system(size: 11, weight: .bold))
-                            .frame(width: 28, height: 28)
+                            .frame(width: 24, height: 24)
                             .contentShape(Circle())
                     }
                     .buttonStyle(.borderless)
@@ -89,15 +88,14 @@ struct ClipboardHistoryPanelView: View {
 
             if historyEnabled {
                 ClipboardSearchField(text: $viewModel.searchText)
+                ClipboardFilterTabs(selection: $viewModel.selectedFilter)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
     }
 
     private var activeContent: some View {
-        VStack(spacing: 10) {
-            filterBar
-                .padding(.horizontal, 18)
-
+        VStack(spacing: 0) {
             if viewModel.items.isEmpty {
                 ClipboardEmptyStateView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -138,17 +136,6 @@ struct ClipboardHistoryPanelView: View {
                 .scrollIndicators(.never)
             }
         }
-    }
-
-    private var filterBar: some View {
-        Picker("Clipboard Filter", selection: $viewModel.selectedFilter) {
-            ForEach(ClipboardHistoryFilter.allCases) { filter in
-                Label(filter.label, systemImage: filter.systemImage)
-                    .tag(filter)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
     }
 
     private var footer: some View {
@@ -245,12 +232,47 @@ private struct ClipboardSearchField: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(.vertical, 7)
+        .background(Color.primary.opacity(0.025), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
+    }
+}
+
+private struct ClipboardFilterTabs: View {
+    @Binding var selection: ClipboardHistoryFilter
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(ClipboardHistoryFilter.allCases) { filter in
+                filterButton(filter)
+            }
+        }
+        .padding(2)
+        .background(Color.primary.opacity(0.045), in: Capsule())
+        .frame(height: 26)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Clipboard filter")
+    }
+
+    private func filterButton(_ filter: ClipboardHistoryFilter) -> some View {
+        let isSelected = selection == filter
+
+        return Button {
+            selection = filter
+        } label: {
+            Text(filter.label)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+                .frame(width: 58, height: 22)
+                .foregroundStyle(isSelected ? Color.white : Color.primary.opacity(0.72))
+                .background(isSelected ? Color.effectiveAccent : Color.clear, in: Capsule())
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help(filter.label)
     }
 }
 
