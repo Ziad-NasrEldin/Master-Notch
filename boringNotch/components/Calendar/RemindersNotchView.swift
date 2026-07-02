@@ -23,24 +23,20 @@ struct RemindersNotchView: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 24) {
+        HStack(alignment: .center, spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
                 statusLine
                 content
             }
-            .frame(width: 310, alignment: .leading)
+            .frame(width: 276, alignment: .leading)
+            .layoutPriority(1)
 
             Spacer(minLength: 0)
 
-            VStack(alignment: .trailing, spacing: 12) {
-                topControls
-                addReminderControl
-            }
-            .frame(width: 210, alignment: .trailing)
+            rightRail
         }
-        .padding(.horizontal, 28)
         .padding(.vertical, 8)
-        .frame(width: 608, height: 142, alignment: .center)
+        .frame(width: 540, height: 142, alignment: .center)
         .contentShape(Rectangle())
         .onHover { hovering in
             calendarManager.setRemindersListHovering(hovering)
@@ -100,7 +96,7 @@ struct RemindersNotchView: View {
                 .font(.caption)
                 .foregroundStyle(notchTheme.secondaryForeground)
         }
-        .frame(width: 300, height: 72, alignment: .center)
+        .frame(width: 276, height: 72, alignment: .center)
     }
 
     private func stateMessage(_ message: String) -> some View {
@@ -109,7 +105,7 @@ struct RemindersNotchView: View {
             .foregroundStyle(notchTheme.secondaryForeground)
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
-            .frame(width: 300, height: 72, alignment: .topLeading)
+            .frame(width: 276, height: 72, alignment: .topLeading)
             .padding(.top, 2)
     }
 
@@ -123,7 +119,7 @@ struct RemindersNotchView: View {
             .padding(.trailing, 4)
         }
         .scrollIndicators(.visible)
-        .frame(width: 310, height: 72, alignment: .topLeading)
+        .frame(width: 276, height: 72, alignment: .topLeading)
     }
 
     private func reminderRow(_ reminder: ReminderModel) -> some View {
@@ -200,6 +196,17 @@ struct RemindersNotchView: View {
                 }
             }
         }
+    }
+
+    private var rightRail: some View {
+        ZStack {
+            topControls
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+
+            addReminderControl
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        }
+        .frame(width: 244, height: 126, alignment: .center)
     }
 
     private var reminderListMenu: some View {
@@ -301,7 +308,7 @@ struct RemindersNotchView: View {
             )
         }
         .padding(.horizontal, 9)
-        .frame(width: 206, height: 32)
+        .frame(width: 236, height: 32)
         .background(
             notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 0.86 : 0.52),
             in: Capsule()
