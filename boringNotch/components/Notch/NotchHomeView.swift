@@ -27,11 +27,12 @@ struct MusicPlayerView: View {
 struct AlbumArtView: View {
     @ObservedObject var musicManager = MusicManager.shared
     @ObservedObject var vm: BoringViewModel
+    @Default(.notchTheme) private var notchTheme
     let albumArtNamespace: Namespace.ID
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            if Defaults[.lightingEffect] {
+            if Defaults[.lightingEffect] && notchTheme == .black {
                 albumArtBackground
             }
             albumArtButton
@@ -76,7 +77,7 @@ struct AlbumArtView: View {
         Rectangle()
             .aspectRatio(1, contentMode: .fit)
             .foregroundColor(Color.black)
-            .opacity(musicManager.isPlaying ? 0 : 0.8)
+            .opacity(!musicManager.isPlaying && notchTheme == .black ? 0.8 : 0)
             .blur(radius: 50)
     }
                 
@@ -427,6 +428,9 @@ struct NotchHomeView: View {
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     let albumArtNamespace: Namespace.ID
     let availableSize: CGSize?
+    private var expandedContentOffset: CGFloat {
+        availableSize == nil ? 0 : 8
+    }
 
     init(albumArtNamespace: Namespace.ID, availableSize: CGSize? = nil) {
         self.albumArtNamespace = albumArtNamespace
@@ -471,6 +475,7 @@ struct NotchHomeView: View {
         }
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
         .blur(radius: vm.notchState == .closed ? 30 : 0)
+        .offset(y: expandedContentOffset)
         .frame(width: availableSize?.width, height: availableSize?.height, alignment: .center)
     }
 }

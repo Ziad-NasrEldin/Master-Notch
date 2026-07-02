@@ -120,7 +120,14 @@ class CalendarManager: ObservableObject {
 
         switch status {
         case .notDetermined:
-            return
+            guard let granted = try? await calendarService.requestAccess(to: .reminder) else {
+                self.reminderAuthorizationStatus = .notDetermined
+                return
+            }
+            self.reminderAuthorizationStatus = granted ? .fullAccess : .denied
+            if granted {
+                await reloadCalendarAndReminderLists()
+            }
         case .restricted, .denied:
             NSLog("Reminder access denied or restricted")
         case .fullAccess:
@@ -136,7 +143,7 @@ class CalendarManager: ObservableObject {
     func refreshReminderAuthorizationStatus() async {
         let status = EKEventStore.authorizationStatus(for: .reminder)
         reminderAuthorizationStatus = status
-        if hasReminderAccess {
+        if hasFullReminderAccess(status) {
             await reloadCalendarAndReminderLists()
         } else {
             reminders = []
@@ -147,7 +154,7 @@ class CalendarManager: ObservableObject {
     func requestReminderAuthorization() async {
         let currentStatus = EKEventStore.authorizationStatus(for: .reminder)
         reminderAuthorizationStatus = currentStatus
-        if hasReminderAccess {
+        if hasFullReminderAccess(currentStatus) {
             await reloadCalendarAndReminderLists()
             return
         }
@@ -160,18 +167,14 @@ class CalendarManager: ObservableObject {
             reminderAuthorizationStatus = EKEventStore.authorizationStatus(for: .reminder)
             return
         }
-        reminderAuthorizationStatus = EKEventStore.authorizationStatus(for: .reminder)
-        if granted || hasReminderAccess {
+        reminderAuthorizationStatus = granted ? .fullAccess : .denied
+        if granted {
             await reloadCalendarAndReminderLists()
         }
     }
 
-    var canRequestReminderAuthorization: Bool {
-        reminderAuthorizationStatus == .notDetermined && !Defaults[.didRequestRemindersAuthorization]
-    }
-
-    var hasReminderAccess: Bool {
-        reminderAuthorizationStatus == .fullAccess || reminderAuthorizationStatus == .authorized
+    private func hasFullReminderAccess(_ status: EKAuthorizationStatus) -> Bool {
+        status == .fullAccess
     }
 
     func updateSelectedReminderList() {
@@ -206,7 +209,7 @@ class CalendarManager: ObservableObject {
     func refreshSelectedReminders() async {
         reminderErrorMessage = nil
 
-        guard hasReminderAccess else {
+        guard hasFullReminderAccess(reminderAuthorizationStatus) else {
             reminders = []
             remindersLoading = false
             return

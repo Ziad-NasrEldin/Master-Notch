@@ -645,6 +645,9 @@ struct HUD: View {
             let granted = await XPCHelperClient.shared.isAccessibilityAuthorized()
             await MainActor.run {
                 accessibilityAuthorized = granted
+                if granted {
+                    Defaults[.hudReplacement] = true
+                }
                 requestingAccessibility = false
             }
         }
@@ -922,13 +925,13 @@ struct RemindersSettings: View {
                 }
 
                 switch calendarManager.reminderAuthorizationStatus {
-                case .notDetermined where calendarManager.canRequestReminderAuthorization:
+                case .notDetermined:
                     Button("Request Reminders Access") {
                         Task {
                             await calendarManager.requestReminderAuthorization()
                         }
                     }
-                case .notDetermined, .denied, .restricted, .writeOnly:
+                case .denied, .restricted, .writeOnly:
                     Button("Open Reminder Settings") {
                         openReminderSettings()
                     }
@@ -946,7 +949,7 @@ struct RemindersSettings: View {
             }
 
             Section {
-                if calendarManager.hasReminderAccess {
+                if calendarManager.reminderAuthorizationStatus == .fullAccess {
                     if calendarManager.reminderLists.isEmpty {
                         Text("No reminder lists were found.")
                             .foregroundStyle(.secondary)
@@ -985,7 +988,7 @@ struct RemindersSettings: View {
                 Defaults.Toggle(key: .showCalendar) {
                     Text("Show calendar and due reminders in Home tab")
                 }
-                if calendarManager.hasReminderAccess {
+                if calendarManager.reminderAuthorizationStatus == .fullAccess {
                     if calendarManager.reminderLists.isEmpty {
                         Text("No reminder lists were found.")
                             .foregroundStyle(.secondary)
@@ -1046,12 +1049,12 @@ struct RemindersSettings: View {
     private var reminderAuthorizationText: String {
         switch calendarManager.reminderAuthorizationStatus {
         case .notDetermined:
-            return calendarManager.canRequestReminderAuthorization ? "Not requested" : "Needs settings"
+            return "Not requested"
         case .restricted:
             return "Restricted"
         case .denied:
             return "Denied"
-        case .fullAccess, .authorized:
+        case .fullAccess:
             return "Allowed"
         case .writeOnly:
             return "Write only"
@@ -1062,9 +1065,9 @@ struct RemindersSettings: View {
 
     private var reminderAuthorizationColor: Color {
         switch calendarManager.reminderAuthorizationStatus {
-        case .fullAccess, .authorized:
+        case .fullAccess:
             return .green
-        case .notDetermined where calendarManager.canRequestReminderAuthorization:
+        case .notDetermined:
             return .secondary
         default:
             return .red

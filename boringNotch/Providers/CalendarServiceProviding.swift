@@ -7,7 +7,6 @@
 //  Modified by Alexander on 08/06/25
 //
 
-import Defaults
 import Foundation
 @preconcurrency import EventKit
 
@@ -46,20 +45,12 @@ class CalendarService: CalendarServiceProviding {
     @MainActor
     func requestAccess(to type: EKEntityType) async throws -> Bool {
         let status = EKEventStore.authorizationStatus(for: type)
-        if status == .fullAccess || status == .authorized {
+        if status == .fullAccess {
             return true
         }
 
         guard status == .notDetermined else {
             return false
-        }
-
-        if type == .reminder {
-            guard !Defaults[.didRequestRemindersAuthorization] else {
-                return false
-            }
-
-            Defaults[.didRequestRemindersAuthorization] = true
         }
 
         if #available(macOS 14.0, *) {
@@ -78,7 +69,11 @@ class CalendarService: CalendarServiceProviding {
     
     private func hasAccess(to entityType: EKEntityType) -> Bool {
         let status = EKEventStore.authorizationStatus(for: entityType)
-        return status == .fullAccess || status == .authorized
+        if #available(macOS 14.0, *) {
+            return status == .fullAccess
+        } else {
+            return status == .authorized
+        }
     }
     
     func calendars() async -> [CalendarModel] {

@@ -81,6 +81,27 @@ struct ContentView: View {
         )
     }
 
+    private var notchShellShadowColor: Color {
+        guard (vm.notchState == .open || isHovering) && Defaults[.enableShadow] else {
+            return .clear
+        }
+
+        switch notchTheme {
+        case .black:
+            return notchTheme.shadow
+        case .white:
+            return .black.opacity(0.035)
+        }
+    }
+
+    private var notchShellShadowRadius: CGFloat {
+        notchTheme == .white ? 18 : (Defaults[.cornerRadiusScaling] ? 6 : 4)
+    }
+
+    private var notchShellShadowYOffset: CGFloat {
+        notchTheme == .white ? 5 : 0
+    }
+
     private var computedChinWidth: CGFloat {
         var chinWidth: CGFloat = vm.closedNotchSize.width
 
@@ -139,8 +160,9 @@ struct ContentView: View {
                             .padding(.horizontal, topCornerRadius)
                     }
                     .shadow(
-                        color: ((vm.notchState == .open || isHovering) && Defaults[.enableShadow])
-                            ? notchTheme.shadow : .clear, radius: Defaults[.cornerRadiusScaling] ? 6 : 4
+                        color: notchShellShadowColor,
+                        radius: notchShellShadowRadius,
+                        y: notchShellShadowYOffset
                     )
                     .padding(
                         .bottom,

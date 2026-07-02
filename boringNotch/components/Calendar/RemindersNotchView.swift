@@ -95,7 +95,7 @@ struct RemindersNotchView: View {
 
     @ViewBuilder
     private var content: some View {
-        if !calendarManager.hasReminderAccess {
+        if calendarManager.reminderAuthorizationStatus != .fullAccess {
             stateMessage("Enable Reminders access to show your list.")
         } else if calendarManager.remindersLoading && calendarManager.reminders.isEmpty {
             loadingState
@@ -216,7 +216,7 @@ struct RemindersNotchView: View {
             }
             .disabled(calendarManager.remindersLoading)
 
-            if !calendarManager.hasReminderAccess {
+            if calendarManager.reminderAuthorizationStatus != .fullAccess {
                 controlButton(icon: permissionButtonIcon, title: permissionButtonTitle) {
                     handlePermissionAction()
                 }
@@ -373,7 +373,7 @@ struct RemindersNotchView: View {
     }
 
     private var statusTitle: String {
-        if !calendarManager.hasReminderAccess {
+        if calendarManager.reminderAuthorizationStatus != .fullAccess {
             return "Reminders"
         }
 
@@ -381,7 +381,7 @@ struct RemindersNotchView: View {
     }
 
     private var statusIcon: String {
-        calendarManager.hasReminderAccess ? "checklist.checked" : "lock.slash"
+        calendarManager.reminderAuthorizationStatus == .fullAccess ? "checklist.checked" : "lock.slash"
     }
 
     private var permissionButtonTitle: String {
@@ -426,11 +426,12 @@ struct RemindersNotchView: View {
     }
 
     private func handlePermissionAction() {
-        if calendarManager.canRequestReminderAuthorization {
+        switch calendarManager.reminderAuthorizationStatus {
+        case .notDetermined:
             Task {
                 await calendarManager.requestReminderAuthorization()
             }
-        } else {
+        default:
             openReminderSettings()
         }
     }

@@ -14,6 +14,7 @@ struct ClipboardHistoryPanelView: View {
     @Default(.clipboardHistoryShowSourceApps) private var showSourceApps
     @Default(.useCustomAccentColor) private var useCustomAccentColor
     @Default(.customAccentColorData) private var customAccentColorData
+    @State private var isSearchExpanded = false
 
     let updater: SPUUpdater?
 
@@ -79,6 +80,7 @@ struct ClipboardHistoryPanelView: View {
 
                 if historyEnabled {
                     Button {
+                        collapseSearchControl()
                         viewModel.toggleUserPaused()
                     } label: {
                         Image(systemName: viewModel.isUserPaused ? "play.fill" : "pause.fill")
@@ -91,11 +93,18 @@ struct ClipboardHistoryPanelView: View {
                     .help(viewModel.isUserPaused ? "Resume clipboard history" : "Pause clipboard history")
                 }
             }
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded {
+                collapseSearchControl()
+            })
 
             if historyEnabled {
-                ClipboardSearchField(text: $viewModel.searchText)
-                ClipboardFilterTabs(selection: $viewModel.selectedFilter)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                ClipboardFilterSearchRow(
+                    selection: $viewModel.selectedFilter,
+                    searchText: $viewModel.searchText,
+                    isSearchExpanded: $isSearchExpanded,
+                    collapseSearch: collapseSearchControl
+                )
             }
         }
     }
@@ -142,6 +151,10 @@ struct ClipboardHistoryPanelView: View {
                 .scrollIndicators(.never)
             }
         }
+        .contentShape(Rectangle())
+        .simultaneousGesture(TapGesture().onEnded {
+            collapseSearchControl()
+        })
     }
 
     private var footer: some View {
@@ -201,6 +214,17 @@ struct ClipboardHistoryPanelView: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 12)
         }
+        .contentShape(Rectangle())
+        .simultaneousGesture(TapGesture().onEnded {
+            collapseSearchControl()
+        })
+    }
+
+    private func collapseSearchControl() {
+        guard isSearchExpanded else { return }
+        withAnimation(.smooth(duration: 0.24)) {
+            isSearchExpanded = false
+        }
     }
 }
 
@@ -213,42 +237,107 @@ private struct ClipboardPanelBackground: View {
     }
 }
 
-private struct ClipboardSearchField: View {
-    @Binding var text: String
+private struct ClipboardFilterSearchRow: View {
+    @Binding var selection: ClipboardHistoryFilter
+    @Binding var searchText: String
+    @Binding var isSearchExpanded: Bool
+    let collapseSearch: () -> Void
 
     var body: some View {
-        HStack(spacing: 9) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
+        HStack(spacing: 8) {
+            ClipboardFilterTabs(
+                selection: $selection,
+                collapseSearch: collapseSearch
+            )
 
-            TextField("Search history", text: $text)
-                .textFieldStyle(.plain)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.primary)
+            ClipboardSearchField(
+                text: $searchText,
+                isExpanded: $isSearchExpanded
+            )
+        }
+        .frame(maxWidth: isSearchExpanded ? .infinity : nil, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: isSearchExpanded ? .leading : .center)
+        .animation(.smooth(duration: 0.24), value: isSearchExpanded)
+    }
+}
 
-            if !text.isEmpty {
-                Button {
-                    text = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.tertiary)
+private struct ClipboardSearchField: View {
+    @Binding var text: String
+    @Binding var isExpanded: Bool
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack(spacing: isExpanded ? 8 : 0) {
+            Button {
+                withAnimation(.smooth(duration: 0.24)) {
+                    isExpanded = true
                 }
-                .buttonStyle(.plain)
+                isFocused = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(isExpanded ? .secondary : Color.primary.opacity(0.72))
+                    .frame(width: 26, height: 26)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("Search history")
+
+            if isExpanded {
+                TextField("Search history", text: $text)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .focused($isFocused)
+                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+
+                if !text.isEmpty {
+                    Button {
+                        text = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                }
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        .background(Color.primary.opacity(0.025), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 11, style: .continuous)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .frame(width: isExpanded ? 150 : 30, height: 26, alignment: .leading)
+        .padding(.horizontal, isExpanded ? 6 : 0)
+        .background(searchBackground, in: Capsule())
+        .overlay {
+            Capsule()
+                .stroke(Color.primary.opacity(isExpanded ? 0.06 : 0), lineWidth: 1)
+        }
+        .clipped()
+        .onChange(of: isExpanded) { _, expanded in
+            guard expanded else {
+                isFocused = false
+                return
+            }
+            DispatchQueue.main.async {
+                isFocused = true
+            }
+        }
+        .onChange(of: isFocused) { _, focused in
+            guard !focused, isExpanded else { return }
+            withAnimation(.smooth(duration: 0.24)) {
+                isExpanded = false
+            }
+        }
+        .animation(.smooth(duration: 0.24), value: isExpanded)
+    }
+
+    private var searchBackground: Color {
+        isExpanded ? Color.primary.opacity(0.025) : Color.primary.opacity(0.045)
     }
 }
 
 private struct ClipboardFilterTabs: View {
     @Binding var selection: ClipboardHistoryFilter
+    let collapseSearch: () -> Void
 
     var body: some View {
         HStack(spacing: 2) {
@@ -268,6 +357,7 @@ private struct ClipboardFilterTabs: View {
 
         return Button {
             selection = filter
+            collapseSearch()
         } label: {
             Text(filter.label)
                 .font(.caption.weight(.semibold))
