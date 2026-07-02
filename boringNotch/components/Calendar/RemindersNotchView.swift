@@ -3,6 +3,7 @@
 //  boringNotch
 //
 
+import AppKit
 import Defaults
 import EventKit
 import SwiftUI
@@ -13,6 +14,7 @@ struct RemindersNotchView: View {
     @Default(.notchTheme) private var notchTheme
     @FocusState private var addFieldFocused: Bool
     @State private var newReminderTitle = ""
+    @State private var selectingReminderListID: String?
 
     private var visibleReminders: [ReminderModel] {
         calendarManager.reminders.filter { reminder in
@@ -21,130 +23,70 @@ struct RemindersNotchView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            header
-
-            Group {
-                if calendarManager.reminderAuthorizationStatus != .fullAccess {
-                    permissionState
-                } else if calendarManager.selectedReminderList == nil {
-                    noListSelectedState
-                } else {
-                    reminderListState
-                }
+        HStack(alignment: .center, spacing: 24) {
+            VStack(alignment: .leading, spacing: 8) {
+                statusLine
+                content
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .frame(width: 310, alignment: .leading)
+
+            Spacer(minLength: 0)
+
+            VStack(alignment: .trailing, spacing: 12) {
+                topControls
+                addReminderControl
+            }
+            .frame(width: 210, alignment: .trailing)
         }
-        .frame(width: 360, height: 128, alignment: .topLeading)
-        .padding(.horizontal, 13)
-        .padding(.vertical, 10)
-        .background(
-            notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 1 : 0.7),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(notchTheme.secondaryForeground.opacity(0.16), lineWidth: 1)
-        )
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 28)
+        .padding(.vertical, 8)
+        .frame(width: 608, height: 142, alignment: .center)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            calendarManager.setRemindersListHovering(hovering)
+        }
         .task {
             await calendarManager.refreshReminderAuthorizationStatus()
         }
         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
     }
 
-    private var header: some View {
-        HStack(spacing: 7) {
-            Image(systemName: "checklist.checked")
+    private var statusLine: some View {
+        HStack(spacing: 8) {
+            Image(systemName: statusIcon)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color.effectiveAccent)
+                .frame(width: 14, height: 14)
 
-            Text("Reminders")
+            Text(statusTitle)
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(notchTheme.primaryForeground)
+                .lineLimit(1)
 
-            if let selectedReminderList = calendarManager.selectedReminderList {
-                Text(selectedReminderList.title)
-                    .font(.caption.weight(.medium))
+            if calendarManager.selectedReminderList != nil {
+                Label("\(visibleReminders.count)", systemImage: "checkmark.circle.fill")
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(notchTheme.secondaryForeground)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                    .monospacedDigit()
             }
-
-            Spacer(minLength: 0)
-
-            if calendarManager.reminderAuthorizationStatus == .fullAccess,
-               calendarManager.selectedReminderList != nil {
-                Button {
-                    Task {
-                        await calendarManager.refreshSelectedReminders()
-                    }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 11, weight: .semibold))
-                        .frame(width: 20, height: 20)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(notchTheme.secondaryForeground)
-                .help("Refresh reminders")
-                .disabled(calendarManager.remindersLoading)
-            }
-        }
-        .frame(height: 20)
-    }
-
-    private var permissionState: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            stateLine(
-                icon: "lock",
-                title: "Reminders access needed",
-                message: "Enable access to show and update your list."
-            )
-
-            Button(action: handlePermissionAction) {
-                Label(permissionButtonTitle, systemImage: permissionButtonIcon)
-                    .font(.caption.weight(.semibold))
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .tint(.effectiveAccent)
         }
     }
 
-    private var noListSelectedState: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            stateLine(
-                icon: "list.bullet.rectangle",
-                title: "No list selected",
-                message: "Choose a Reminder list in Settings."
-            )
-
-            Button {
-                SettingsWindowController.shared.showWindow()
-            } label: {
-                Label("Open Settings", systemImage: "gear")
-                    .font(.caption.weight(.semibold))
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
-        }
-    }
-
-    private var reminderListState: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let errorMessage = calendarManager.reminderErrorMessage {
-                errorBanner(errorMessage)
-            }
-
-            if calendarManager.remindersLoading && calendarManager.reminders.isEmpty {
-                loadingState
-            } else if visibleReminders.isEmpty {
-                emptyState
-            } else {
-                remindersList
-            }
-
-            addReminderRow
+    @ViewBuilder
+    private var content: some View {
+        if calendarManager.reminderAuthorizationStatus != .fullAccess {
+            stateMessage("Enable Reminders access to show your list.")
+        } else if calendarManager.remindersLoading && calendarManager.reminders.isEmpty {
+            loadingState
+        } else if calendarManager.selectedReminderList == nil {
+            stateMessage(calendarManager.reminderLists.isEmpty ? "No Reminder lists found." : "Choose a list to show here.")
+        } else if let errorMessage = calendarManager.reminderErrorMessage,
+                  visibleReminders.isEmpty {
+            stateMessage(errorMessage)
+        } else if visibleReminders.isEmpty {
+            stateMessage("No reminders in this list.")
+        } else {
+            remindersList
         }
     }
 
@@ -153,78 +95,35 @@ struct RemindersNotchView: View {
             ProgressView()
                 .controlSize(.small)
                 .scaleEffect(0.62)
+
             Text("Loading reminders")
                 .font(.caption)
                 .foregroundStyle(notchTheme.secondaryForeground)
         }
-        .frame(maxWidth: .infinity, minHeight: 42, alignment: .center)
+        .frame(width: 300, height: 72, alignment: .center)
     }
 
-    private var emptyState: some View {
-        stateLine(
-            icon: "checkmark.circle",
-            title: "No reminders",
-            message: "Add one below to start this list."
-        )
-        .frame(maxWidth: .infinity, minHeight: 42, alignment: .leading)
+    private func stateMessage(_ message: String) -> some View {
+        Text(message)
+            .font(.caption)
+            .foregroundStyle(notchTheme.secondaryForeground)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(width: 300, height: 72, alignment: .topLeading)
+            .padding(.top, 2)
     }
 
     private var remindersList: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 4) {
-                ForEach(visibleReminders) { reminder in
+        ScrollView(.vertical, showsIndicators: true) {
+            LazyVStack(alignment: .leading, spacing: 5) {
+                ForEach(visibleReminders.prefix(6)) { reminder in
                     reminderRow(reminder)
                 }
             }
+            .padding(.trailing, 4)
         }
-        .scrollIndicators(.never)
-        .frame(height: calendarManager.reminderErrorMessage == nil ? 55 : 37)
-    }
-
-    private var addReminderRow: some View {
-        HStack(spacing: 7) {
-            Image(systemName: "plus")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(notchTheme.secondaryForeground)
-
-            TextField("New reminder", text: $newReminderTitle)
-                .textFieldStyle(.plain)
-                .font(.caption)
-                .foregroundStyle(notchTheme.primaryForeground)
-                .focused($addFieldFocused)
-                .onTapGesture {
-                    NSApp.activate(ignoringOtherApps: true)
-                    addFieldFocused = true
-                }
-                .onSubmit(addReminder)
-
-            Button(action: addReminder) {
-                if calendarManager.addingReminder {
-                    ProgressView()
-                        .controlSize(.small)
-                        .scaleEffect(0.45)
-                        .frame(width: 18, height: 18)
-                } else {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .frame(width: 18, height: 18)
-                }
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(Color.effectiveAccent)
-            .help("Add reminder")
-            .disabled(trimmedNewReminderTitle.isEmpty || calendarManager.addingReminder)
-        }
-        .padding(.horizontal, 8)
-        .frame(height: 26)
-        .background(
-            notchTheme.background.opacity(notchTheme == .white ? 0.72 : 0.38),
-            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(notchTheme.secondaryForeground.opacity(addFieldFocused ? 0.32 : 0.14), lineWidth: 1)
-        )
+        .scrollIndicators(.visible)
+        .frame(width: 310, height: 72, alignment: .topLeading)
     }
 
     private func reminderRow(_ reminder: ReminderModel) -> some View {
@@ -259,13 +158,8 @@ struct RemindersNotchView: View {
                         .frame(width: 14, height: 14)
                 }
             }
-            .padding(.horizontal, 7)
-            .frame(height: 23)
-            .background(
-                notchTheme.background.opacity(notchTheme == .white ? 0.58 : 0.26),
-                in: RoundedRectangle(cornerRadius: 8, style: .continuous)
-            )
-            .opacity(reminder.isCompleted ? 0.5 : 1)
+            .frame(height: 20)
+            .opacity(reminder.isCompleted ? 0.52 : 1)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -279,56 +173,182 @@ struct RemindersNotchView: View {
         return ZStack {
             Circle()
                 .strokeBorder(color, lineWidth: 2)
-                .frame(width: 14, height: 14)
+                .frame(width: 13, height: 13)
 
             if reminder.isCompleted {
                 Circle()
                     .fill(color)
-                    .frame(width: 8, height: 8)
+                    .frame(width: 7, height: 7)
             }
         }
     }
 
-    private func stateLine(icon: String, title: String, message: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(notchTheme.secondaryForeground)
-                .frame(width: 18)
+    private var topControls: some View {
+        HStack(spacing: 9) {
+            reminderListMenu
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
+            controlButton(icon: "arrow.clockwise", title: "Refresh") {
+                Task {
+                    await calendarManager.refreshSelectedReminders()
+                }
+            }
+            .disabled(calendarManager.remindersLoading)
+
+            if calendarManager.reminderAuthorizationStatus != .fullAccess {
+                controlButton(icon: permissionButtonIcon, title: permissionButtonTitle) {
+                    handlePermissionAction()
+                }
+            }
+        }
+    }
+
+    private var reminderListMenu: some View {
+        Menu {
+            Button {
+                selectReminderList("")
+            } label: {
+                if calendarManager.selectedReminderList == nil {
+                    Label("None", systemImage: "checkmark")
+                } else {
+                    Text("None")
+                }
+            }
+
+            Divider()
+
+            ForEach(calendarManager.reminderLists, id: \.id) { list in
+                Button {
+                    selectReminderList(list.id)
+                } label: {
+                    if calendarManager.selectedReminderList?.id == list.id {
+                        Label(list.title, systemImage: "checkmark")
+                    } else {
+                        Text(list.title)
+                    }
+                }
+                .disabled(selectingReminderListID == list.id)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                if selectingReminderListID != nil {
+                    ProgressView()
+                        .controlSize(.small)
+                        .scaleEffect(0.45)
+                        .frame(width: 12, height: 12)
+                } else {
+                    Image(systemName: "list.bullet")
+                        .font(.system(size: 10, weight: .semibold))
+                        .frame(width: 12, height: 12)
+                }
+
+                Text(selectedReminderListTitle)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(notchTheme.primaryForeground)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
 
-                Text(message)
-                    .font(.caption2)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(notchTheme.secondaryForeground)
-                    .lineLimit(2)
             }
+            .padding(.horizontal, 8)
+            .frame(width: reminderListMenuWidth, height: 28, alignment: .leading)
+            .background(
+                notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 0.86 : 0.52),
+                in: Capsule()
+            )
         }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .help("Change reminder list")
+        .disabled(selectingReminderListID != nil)
     }
 
-    private func errorBanner(_ message: String) -> some View {
+    private var addReminderControl: some View {
         HStack(spacing: 6) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 10, weight: .semibold))
-            Text(message)
-                .font(.caption2)
-                .lineLimit(1)
-                .truncationMode(.tail)
+            TextField("New reminder", text: $newReminderTitle)
+                .textFieldStyle(.plain)
+                .font(.caption)
+                .foregroundStyle(notchTheme.primaryForeground)
+                .frame(height: 28)
+                .focused($addFieldFocused)
+                .disabled(calendarManager.selectedReminderList == nil || calendarManager.addingReminder)
+                .onTapGesture {
+                    NSApp.activate(ignoringOtherApps: true)
+                    addFieldFocused = true
+                }
+                .onSubmit(addReminder)
+
+            Button(action: addReminder) {
+                if calendarManager.addingReminder {
+                    ProgressView()
+                        .controlSize(.small)
+                        .scaleEffect(0.45)
+                        .frame(width: 22, height: 22)
+                } else {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .bold))
+                        .frame(width: 22, height: 22)
+                }
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(Color.effectiveAccent)
+            .help("Add reminder")
+            .disabled(
+                calendarManager.selectedReminderList == nil
+                    || trimmedNewReminderTitle.isEmpty
+                    || calendarManager.addingReminder
+            )
         }
-        .foregroundStyle(.red)
-        .padding(.horizontal, 7)
-        .frame(height: 18)
+        .padding(.horizontal, 9)
+        .frame(width: 206, height: 32)
         .background(
-            Color.red.opacity(notchTheme == .white ? 0.10 : 0.18),
-            in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+            notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 0.86 : 0.52),
+            in: Capsule()
         )
+    }
+
+    private func controlButton(icon: String, title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .frame(width: 28, height: 28)
+                .background(
+                    notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 0.86 : 0.52),
+                    in: Circle()
+                )
+                .foregroundStyle(notchTheme.primaryForeground)
+        }
+        .buttonStyle(.plain)
+        .help(title)
     }
 
     private var trimmedNewReminderTitle: String {
         newReminderTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var selectedReminderListTitle: String {
+        calendarManager.selectedReminderList?.title ?? "List"
+    }
+
+    private var reminderListMenuWidth: CGFloat {
+        let font = NSFont.systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
+        let titleWidth = selectedReminderListTitle.size(withAttributes: [.font: font]).width
+        let chromeWidth: CGFloat = 48
+
+        return min(max(72, ceil(titleWidth + chromeWidth)), 136)
+    }
+
+    private var statusTitle: String {
+        if calendarManager.reminderAuthorizationStatus != .fullAccess {
+            return "Reminders"
+        }
+
+        return calendarManager.selectedReminderList?.title ?? "Reminders"
+    }
+
+    private var statusIcon: String {
+        calendarManager.reminderAuthorizationStatus == .fullAccess ? "checklist.checked" : "lock.slash"
     }
 
     private var permissionButtonTitle: String {
@@ -337,6 +357,18 @@ struct RemindersNotchView: View {
 
     private var permissionButtonIcon: String {
         calendarManager.reminderAuthorizationStatus == .notDetermined ? "checkmark.shield" : "gear"
+    }
+
+    private func selectReminderList(_ id: String) {
+        guard calendarManager.selectedReminderList?.id != id || id.isEmpty else { return }
+
+        selectingReminderListID = id
+        Task {
+            await calendarManager.setSelectedReminderListID(id)
+            await MainActor.run {
+                selectingReminderListID = nil
+            }
+        }
     }
 
     private func addReminder() {
@@ -390,5 +422,6 @@ struct RemindersNotchView: View {
 
 #Preview {
     RemindersNotchView()
+        .frame(width: 640, height: 160)
         .background(Defaults[.notchTheme].background)
 }
