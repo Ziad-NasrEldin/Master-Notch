@@ -1173,22 +1173,14 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-<<<<<<< HEAD
-				CURRENT_PROJECT_VERSION = 2;
-=======
-				CURRENT_PROJECT_VERSION = 273;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				CURRENT_PROJECT_VERSION = 274;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BoringNotchXPCHelper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MinitapXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-<<<<<<< HEAD
-				MARKETING_VERSION = 1.0.1;
-=======
-				MARKETING_VERSION = 2.7.5;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				MARKETING_VERSION = 2.7.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.minitap.minitap.MinitapXPCHelper;
 				PRODUCT_NAME = MinitapXPCHelper;
 				REGISTER_APP_GROUPS = YES;
@@ -1206,22 +1198,14 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-<<<<<<< HEAD
-				CURRENT_PROJECT_VERSION = 2;
-=======
-				CURRENT_PROJECT_VERSION = 273;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				CURRENT_PROJECT_VERSION = 274;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BoringNotchXPCHelper/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MinitapXPCHelper;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-<<<<<<< HEAD
-				MARKETING_VERSION = 1.0.1;
-=======
-				MARKETING_VERSION = 2.7.5;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				MARKETING_VERSION = 2.7.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.minitap.minitap.MinitapXPCHelper;
 				PRODUCT_NAME = MinitapXPCHelper;
 				REGISTER_APP_GROUPS = YES;
@@ -1368,11 +1352,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-<<<<<<< HEAD
-				CURRENT_PROJECT_VERSION = 2;
-=======
-				CURRENT_PROJECT_VERSION = 273;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				CURRENT_PROJECT_VERSION = 274;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -1399,11 +1379,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-<<<<<<< HEAD
-				MARKETING_VERSION = 1.0.1;
-=======
-				MARKETING_VERSION = 2.7.5;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				MARKETING_VERSION = 2.7.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.minitap.minitap;
 				PRODUCT_NAME = minitap;
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1430,11 +1406,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-<<<<<<< HEAD
-				CURRENT_PROJECT_VERSION = 2;
-=======
-				CURRENT_PROJECT_VERSION = 273;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				CURRENT_PROJECT_VERSION = 274;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"boringNotch/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
@@ -1460,11 +1432,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-<<<<<<< HEAD
-				MARKETING_VERSION = 1.0.1;
-=======
-				MARKETING_VERSION = 2.7.5;
->>>>>>> firstmate/minitap-reminders-notch-ux
+				MARKETING_VERSION = 2.7.6;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.minitap.minitap;
 				PRODUCT_NAME = minitap;
 				PROVISIONING_PROFILE_SPECIFIER = "";

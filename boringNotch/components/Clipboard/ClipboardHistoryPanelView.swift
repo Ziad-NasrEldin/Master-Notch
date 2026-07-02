@@ -181,22 +181,12 @@ struct ClipboardHistoryPanelView: View {
                     .font(.caption.weight(.semibold))
                 }
 
-<<<<<<< HEAD
-                if let updater {
-                    CheckForUpdatesView(updater: updater)
-                        .font(.caption.weight(.semibold))
-                }
-
-                Button("Settings") {
-                    ClipboardPanelController.shared.showSettingsAndDismiss()
-=======
                 Button {
                     SettingsWindowController.shared.showWindow()
                 } label: {
                     Image(systemName: "gearshape")
                         .font(.system(size: 13, weight: .semibold))
                         .frame(width: 26, height: 26)
->>>>>>> firstmate/minitap-reminders-notch-ux
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.primary)
@@ -467,51 +457,28 @@ private struct ClipboardHistoryRow: View {
 
     @ViewBuilder
     private var thumbnail: some View {
-<<<<<<< HEAD
-        if item.kind == .image, let image {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(.thinMaterial)
-=======
         ZStack {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Color.primary.opacity(0.045))
->>>>>>> firstmate/minitap-reminders-notch-ux
 
+            if item.kind == .image, let image {
                 Image(nsImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 42, height: 42)
                     .clipped()
-<<<<<<< HEAD
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-=======
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             } else {
                 Image(systemName: item.kind.systemImage)
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.secondary)
->>>>>>> firstmate/minitap-reminders-notch-ux
             }
-            .frame(width: 66, height: 66)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(.quaternary, lineWidth: 1)
-            )
-        } else {
-            Image(systemName: item.kind.systemImage)
-                .font(.system(size: 25, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 66, height: 66)
         }
-<<<<<<< HEAD
-=======
         .frame(width: 42, height: 42)
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
->>>>>>> firstmate/minitap-reminders-notch-ux
     }
 
     private var rowActions: some View {
