@@ -426,6 +426,12 @@ struct NotchHomeView: View {
     @ObservedObject var batteryModel = BatteryStatusViewModel.shared
     @ObservedObject var coordinator = BoringViewCoordinator.shared
     let albumArtNamespace: Namespace.ID
+    let availableSize: CGSize?
+
+    init(albumArtNamespace: Namespace.ID, availableSize: CGSize? = nil) {
+        self.albumArtNamespace = albumArtNamespace
+        self.availableSize = availableSize
+    }
 
     var body: some View {
         Group {
@@ -465,6 +471,7 @@ struct NotchHomeView: View {
         }
         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity))
         .blur(radius: vm.notchState == .closed ? 30 : 0)
+        .frame(width: availableSize?.width, height: availableSize?.height, alignment: .center)
     }
 }
 
