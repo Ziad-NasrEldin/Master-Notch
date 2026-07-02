@@ -86,15 +86,6 @@ final class PomodoroTimerModel: ObservableObject {
         phase != .idle
     }
 
-    var accent: Color {
-        switch phase {
-        case .idle: return Color(red: 0.58, green: 0.70, blue: 1.0)
-        case .work: return Color(red: 1.0, green: 0.36, blue: 0.42)
-        case .breakTime: return Color(red: 0.30, green: 0.88, blue: 0.68)
-        case .complete: return Color(red: 1.0, green: 0.78, blue: 0.30)
-        }
-    }
-
     var primaryButtonTitle: String {
         if isRunning { return "Pause" }
         switch phase {
@@ -207,6 +198,8 @@ final class PomodoroTimerModel: ObservableObject {
 struct PomodoroView: View {
     @ObservedObject private var timer = PomodoroTimerModel.shared
     @Default(.notchTheme) private var notchTheme
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
     let availableSize: CGSize?
     private let leftPaneLeadingInset: CGFloat = 12
     private let verticalPadding: CGFloat = 8
@@ -246,13 +239,17 @@ struct PomodoroView: View {
         .padding(.vertical, verticalPadding)
         .frame(width: contentWidth, height: outerHeight, alignment: .center)
         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
+        .effectiveAccentColor(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
     }
 
     private var statusLine: some View {
         HStack(spacing: 8) {
             Image(systemName: phaseIcon)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(timer.accent)
+                .foregroundStyle(pomodoroAccent)
                 .frame(width: 14, height: 14)
 
             Text(compactPhaseTitle)
@@ -282,7 +279,7 @@ struct PomodoroView: View {
                     .fill(notchTheme.secondaryForeground.opacity(0.14))
 
                 Capsule()
-                    .fill(timer.accent)
+                    .fill(pomodoroAccent)
                     .frame(width: progressWidth(in: geometry.size.width))
             }
         }
@@ -390,14 +387,24 @@ struct PomodoroView: View {
 
     private func controlBackground(isProminent: Bool) -> Color {
         if isProminent {
-            timer.accent
+            pomodoroAccent
         } else {
             notchTheme.selectedTabBackground.opacity(notchTheme == .white ? 0.9 : 0.56)
         }
     }
 
+    private var pomodoroAccent: Color {
+        EffectiveAccentColor.color(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
+    }
+
     private var prominentControlForeground: Color {
-        timer.phase == .complete ? Color.black.opacity(0.78) : Color.white
+        EffectiveAccentColor.foregroundColor(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
     }
 
     private func progressWidth(in availableWidth: CGFloat) -> CGFloat {

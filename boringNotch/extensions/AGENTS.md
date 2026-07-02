@@ -13,6 +13,7 @@
 ## Local Contracts
 
 - Key local files: ActionBar.swift, BundleInfos.swift, Button+Bouncing.swift, Color+AccentColor.swift, ConditionalModifier.swift, DataTypes+Extensions.swift, MouseTracker.swift, NSImage+Extensions.swift, NSItemProvider+LoadHelpers.swift, NSMenu+AssociatedObject.swift.
+- `Color+AccentColor.swift` owns app-wide accent resolution; use `Color.effectiveAccent`, `NSColor.effectiveAccent`, or `effectiveAccentColor(...)` instead of raw system accent colors for minitap UI.
 - Preserve public interfaces, route names, data shapes, and documented workflows unless the task explicitly changes them.
 
 ## Work Guidance

@@ -12,6 +12,8 @@ struct ClipboardHistoryPanelView: View {
     @ObservedObject private var viewModel = ClipboardHistoryViewModel.shared
     @Default(.clipboardHistoryEnabled) private var historyEnabled
     @Default(.clipboardHistoryShowSourceApps) private var showSourceApps
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
 
     let updater: SPUUpdater?
 
@@ -43,6 +45,10 @@ struct ClipboardHistoryPanelView: View {
             }
         }
         .frame(width: 430, height: 580)
+        .effectiveAccentColor(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
         .onAppear {
             viewModel.start()
         }

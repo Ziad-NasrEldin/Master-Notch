@@ -16,7 +16,9 @@ import SwiftUIIntrospect
 
 struct SettingsView: View {
     @State private var selectedTab = "General"
-    @State private var accentColorUpdateTrigger = UUID()
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
+    private let sidebarItems = SettingsSidebarItem.all
 
     let updaterController: SPUStandardUpdaterController?
 
@@ -26,48 +28,17 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $selectedTab) {
-                NavigationLink(value: "General") {
-                    Label("General", systemImage: "gear")
-                }
-                NavigationLink(value: "Appearance") {
-                    Label("Appearance", systemImage: "eye")
-                }
-                NavigationLink(value: "Media") {
-                    Label("Media", systemImage: "play.laptopcomputer")
-                }
-                NavigationLink(value: "Calendar") {
-                    Label("Calendar", systemImage: "calendar")
-                }
-                NavigationLink(value: "Reminders") {
-                    Label("Reminders", systemImage: "checklist.checked")
-                }
-                NavigationLink(value: "HUD") {
-                    Label("HUDs", systemImage: "dial.medium.fill")
-                }
-                NavigationLink(value: "Battery") {
-                    Label("Battery", systemImage: "battery.100.bolt")
-                }
-//                NavigationLink(value: "Downloads") {
-//                    Label("Downloads", systemImage: "square.and.arrow.down")
-//                }
-                NavigationLink(value: "Shelf") {
-                    Label("Shelf", systemImage: "books.vertical")
-                }
-                NavigationLink(value: "Clipboard") {
-                    Label("Clipboard", systemImage: "doc.on.clipboard")
-                }
-                NavigationLink(value: "Shortcuts") {
-                    Label("Shortcuts", systemImage: "keyboard")
-                }
-                // NavigationLink(value: "Extensions") {
-                //     Label("Extensions", systemImage: "puzzlepiece.extension")
-                // }
-                NavigationLink(value: "Advanced") {
-                    Label("Advanced", systemImage: "gearshape.2")
-                }
-                NavigationLink(value: "About") {
-                    Label("About", systemImage: "info.circle")
+            List {
+                ForEach(sidebarItems) { item in
+                    SettingsSidebarRow(
+                        item: item,
+                        isSelected: selectedTab == item.id
+                    ) {
+                        selectedTab = item.id
+                    }
+                    .listRowInsets(EdgeInsets(top: 1, leading: 8, bottom: 1, trailing: 8))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
             }
             .listStyle(SidebarListStyle())
@@ -129,11 +100,64 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 700)
         .background(Color(NSColor.windowBackgroundColor))
-        .tint(.effectiveAccent)
-        .id(accentColorUpdateTrigger)
-        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("AccentColorChanged"))) { _ in
-            accentColorUpdateTrigger = UUID()
+        .effectiveAccentColor(
+            useCustomAccentColor: useCustomAccentColor,
+            customAccentColorData: customAccentColorData
+        )
+    }
+}
+
+private struct SettingsSidebarItem: Identifiable {
+    let id: String
+    let title: String
+    let systemImage: String
+
+    static let all: [SettingsSidebarItem] = [
+        .init(id: "General", title: "General", systemImage: "gear"),
+        .init(id: "Appearance", title: "Appearance", systemImage: "eye"),
+        .init(id: "Media", title: "Media", systemImage: "play.laptopcomputer"),
+        .init(id: "Calendar", title: "Calendar", systemImage: "calendar"),
+        .init(id: "Reminders", title: "Reminders", systemImage: "checklist.checked"),
+        .init(id: "HUD", title: "HUDs", systemImage: "dial.medium.fill"),
+        .init(id: "Battery", title: "Battery", systemImage: "battery.100.bolt"),
+        .init(id: "Shelf", title: "Shelf", systemImage: "books.vertical"),
+        .init(id: "Clipboard", title: "Clipboard", systemImage: "doc.on.clipboard"),
+        .init(id: "Shortcuts", title: "Shortcuts", systemImage: "keyboard"),
+        .init(id: "Advanced", title: "Advanced", systemImage: "gearshape.2"),
+        .init(id: "About", title: "About", systemImage: "info.circle")
+    ]
+}
+
+private struct SettingsSidebarRow: View {
+    let item: SettingsSidebarItem
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 9) {
+                Image(systemName: item.systemImage)
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 16, height: 16)
+
+                Text(item.title)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(isSelected ? Color.effectiveAccentForeground : Color.primary)
+            .padding(.horizontal, 8)
+            .frame(height: 28)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(isSelected ? Color.effectiveAccent : Color.clear)
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 
@@ -1208,7 +1232,7 @@ struct Shelf: View {
                                 }
                             }
                             .frame(width: 16, height: 16)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(.effectiveAccent)
                             Text(provider.id)
                         }
                         .tag(provider.id)
@@ -1228,7 +1252,7 @@ struct Shelf: View {
                             }
                         }
                         .frame(width: 16, height: 16)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(.effectiveAccent)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Currently selected: \(selectedProvider.id)")
                                 .font(.caption)
@@ -1777,7 +1801,7 @@ struct Advanced: View {
     @Default(.showOnLockScreen) var showOnLockScreen
     @Default(.hideFromScreenRecording) var hideFromScreenRecording
     
-    @State private var customAccentColor: Color = .accentColor
+    @State private var customAccentColor: Color = .effectiveAccent
     @State private var selectedPresetColor: PresetAccentColor? = nil
     let icons: [String] = ["logo2"]
     @State private var selectedIcon: String = "logo2"
@@ -1819,6 +1843,9 @@ struct Advanced: View {
                         Text("Custom").tag(true)
                     }
                     .pickerStyle(.segmented)
+                    .onChange(of: useCustomAccentColor) {
+                        initializeAccentColorState()
+                    }
                     
                     if !useCustomAccentColor {
                         // Brand accent info
@@ -1858,7 +1885,6 @@ struct Advanced: View {
                                         selectedPresetColor = preset
                                         customAccentColor = preset.color
                                         saveCustomColor(preset.color)
-                                        forceUiUpdate()
                                     }
                                 }
                                 Spacer()
@@ -1885,7 +1911,6 @@ struct Advanced: View {
                                         customAccentColor = newColor
                                         selectedPresetColor = nil
                                         saveCustomColor(newColor)
-                                        forceUiUpdate()
                                     }
                                 ), supportsOpacity: false) {
                                     ZStack {
@@ -1997,24 +2022,14 @@ struct Advanced: View {
         }
     }
     
-    private func forceUiUpdate() {
-        // Force refresh the UI
-        DispatchQueue.main.async {
-            NotificationCenter.default.post(name: Notification.Name("AccentColorChanged"), object: nil)
-        }
-    }
-    
     private func saveCustomColor(_ color: Color) {
-        let nsColor = NSColor(color)
-        if let colorData = try? NSKeyedArchiver.archivedData(withRootObject: nsColor, requiringSecureCoding: false) {
-            Defaults[.customAccentColorData] = colorData
-            forceUiUpdate()
+        if let colorData = EffectiveAccentColor.archivedData(for: color) {
+            customAccentColorData = colorData
         }
     }
     
     private func loadCustomColor() {
-        if let colorData = Defaults[.customAccentColorData],
-           let nsColor = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: colorData) {
+        if let nsColor = EffectiveAccentColor.customNSColor(from: customAccentColorData) {
             customAccentColor = Color(nsColor: nsColor)
             
             // Check if loaded color matches a preset

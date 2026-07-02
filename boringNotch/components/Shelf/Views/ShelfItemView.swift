@@ -20,6 +20,8 @@ struct ShelfItemView: View {
     @State private var showStack = false
     @State private var cachedPreviewImage: NSImage?
     @State private var debouncedDropTarget = false
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
 
     private var isSelected: Bool { viewModel.isSelected }
     private var shouldHideDuringDrag: Bool { selection.isDragging && selection.isSelected(item.id) && false }
@@ -89,6 +91,16 @@ struct ShelfItemView: View {
                 cachedPreviewImage = await renderDragPreview()
             }
         }
+        .onChange(of: useCustomAccentColor) {
+            Task {
+                cachedPreviewImage = await renderDragPreview()
+            }
+        }
+        .onChange(of: customAccentColorData) {
+            Task {
+                cachedPreviewImage = await renderDragPreview()
+            }
+        }
         .quickLookPresenter(using: quickLookService)
     }
 
@@ -127,9 +139,9 @@ struct ShelfItemView: View {
 
     private var backgroundColor: Color {
         if debouncedDropTarget {
-            return Color.accentColor.opacity(0.25)
+            return Color.effectiveAccent.opacity(0.25)
         } else if isSelected {
-            return Color.accentColor.opacity(0.15)
+            return Color.effectiveAccent.opacity(0.15)
         } else {
             return Color.clear
         }
@@ -137,9 +149,9 @@ struct ShelfItemView: View {
 
     private var strokeColor: Color {
         if debouncedDropTarget {
-            return Color.accentColor.opacity(0.9)
+            return Color.effectiveAccent.opacity(0.9)
         } else if isSelected {
-            return Color.accentColor.opacity(0.8)
+            return Color.effectiveAccent.opacity(0.8)
         } else {
             return Color.clear
         }

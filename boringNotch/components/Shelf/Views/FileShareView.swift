@@ -15,6 +15,8 @@ struct FileShareView: View {
     @StateObject private var quickShare = QuickShareService.shared
     @Default(.quickShareProvider) var quickShareProvider: String
     @Default(.notchTheme) var notchTheme
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
 
     @State private var hostView: NSView?
     @State private var interactionNonce: UUID = .init()
@@ -47,6 +49,10 @@ struct FileShareView: View {
                     await handleClick()
                 }
             }
+            .effectiveAccentColor(
+                useCustomAccentColor: useCustomAccentColor,
+                customAccentColorData: customAccentColorData
+            )
     }
 
     private var dropArea: some View {
@@ -59,7 +65,7 @@ struct FileShareView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
                             vm.dropZoneTargeting
-                                ? Color.accentColor.opacity(0.9)
+                                ? Color.effectiveAccent.opacity(0.9)
                                 : Color.white.opacity(0.1),
                             style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [10])
                         )
@@ -91,7 +97,7 @@ struct FileShareView: View {
                     }
                     .frame(width: 34, height: 34)
                         .foregroundStyle(
-                            vm.dropZoneTargeting ? Color.accentColor : Color.gray
+                            vm.dropZoneTargeting ? Color.effectiveAccent : Color.gray
                         )
                         .scaleEffect(
                             vm.dropZoneTargeting ? 1.06 : 1.0

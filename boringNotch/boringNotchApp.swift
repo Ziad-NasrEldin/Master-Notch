@@ -16,6 +16,8 @@ import SwiftUI
 struct DynamicNotchApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Default(.menubarIcon) var showMenuBarIcon
+    @Default(.useCustomAccentColor) private var useCustomAccentColor
+    @Default(.customAccentColorData) private var customAccentColorData
     @Environment(\.openWindow) var openWindow
 
     let updaterController: SPUStandardUpdaterController
@@ -34,6 +36,10 @@ struct DynamicNotchApp: App {
         MenuBarExtra(MinitapBrand.appName, systemImage: "sparkle", isInserted: $showMenuBarIcon) {
             ClipboardHistoryPanelView(updater: updaterController.updater)
                 .environment(\.font, MinitapBrand.Fonts.body())
+                .effectiveAccentColor(
+                    useCustomAccentColor: useCustomAccentColor,
+                    customAccentColorData: customAccentColorData
+                )
         }
         .menuBarExtraStyle(.window)
     }
