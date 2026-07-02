@@ -177,6 +177,7 @@ extension Defaults.Keys {
     static let showMirror = Key<Bool>("showMirror", default: false)
     static let mirrorShape = Key<MirrorShapeEnum>("mirrorShape", default: MirrorShapeEnum.rectangle)
     static let settingsIconInNotch = Key<Bool>("settingsIconInNotch", default: true)
+    static let minimalNotchMode = Key<Bool>("minimalNotchMode", default: false)
     static let lightingEffect = Key<Bool>("lightingEffect", default: true)
     static let enableShadow = Key<Bool>("enableShadow", default: true)
     static let cornerRadiusScaling = Key<Bool>("cornerRadiusScaling", default: true)
@@ -186,6 +187,7 @@ extension Defaults.Keys {
     static let tileShowLabels = Key<Bool>("tileShowLabels", default: false)
     static let showCalendar = Key<Bool>("showCalendar", default: false)
     static let hideCompletedReminders = Key<Bool>("hideCompletedReminders", default: true)
+    static let didRequestRemindersAuthorization = Key<Bool>("didRequestRemindersAuthorization", default: false)
     static let selectedReminderListID = Key<String>("selectedReminderListID", default: "")
     static let sliderColor = Key<SliderColorEnum>(
         "sliderUseAlbumArtColor",

@@ -898,13 +898,13 @@ struct RemindersSettings: View {
                 }
 
                 switch calendarManager.reminderAuthorizationStatus {
-                case .notDetermined:
+                case .notDetermined where calendarManager.canRequestReminderAuthorization:
                     Button("Request Reminders Access") {
                         Task {
                             await calendarManager.requestReminderAuthorization()
                         }
                     }
-                case .denied, .restricted, .writeOnly:
+                case .notDetermined, .denied, .restricted, .writeOnly:
                     Button("Open Reminder Settings") {
                         openReminderSettings()
                     }
@@ -922,7 +922,7 @@ struct RemindersSettings: View {
             }
 
             Section {
-                if calendarManager.reminderAuthorizationStatus == .fullAccess {
+                if calendarManager.hasReminderAccess {
                     if calendarManager.reminderLists.isEmpty {
                         Text("No reminder lists were found.")
                             .foregroundStyle(.secondary)
@@ -961,7 +961,7 @@ struct RemindersSettings: View {
                 Defaults.Toggle(key: .showCalendar) {
                     Text("Show calendar and due reminders in Home tab")
                 }
-                if calendarManager.reminderAuthorizationStatus == .fullAccess {
+                if calendarManager.hasReminderAccess {
                     if calendarManager.reminderLists.isEmpty {
                         Text("No reminder lists were found.")
                             .foregroundStyle(.secondary)
@@ -1022,12 +1022,12 @@ struct RemindersSettings: View {
     private var reminderAuthorizationText: String {
         switch calendarManager.reminderAuthorizationStatus {
         case .notDetermined:
-            return "Not requested"
+            return calendarManager.canRequestReminderAuthorization ? "Not requested" : "Needs settings"
         case .restricted:
             return "Restricted"
         case .denied:
             return "Denied"
-        case .fullAccess:
+        case .fullAccess, .authorized:
             return "Allowed"
         case .writeOnly:
             return "Write only"
@@ -1038,9 +1038,9 @@ struct RemindersSettings: View {
 
     private var reminderAuthorizationColor: Color {
         switch calendarManager.reminderAuthorizationStatus {
-        case .fullAccess:
+        case .fullAccess, .authorized:
             return .green
-        case .notDetermined:
+        case .notDetermined where calendarManager.canRequestReminderAuthorization:
             return .secondary
         default:
             return .red
@@ -1529,6 +1529,9 @@ struct Appearance: View {
         Form {
             Section {
                 Toggle("Always show tabs", isOn: $coordinator.alwaysShowTabs)
+                Defaults.Toggle(key: .minimalNotchMode) {
+                    Text("Minimal mode")
+                }
                 Picker("Notch theme", selection: $notchTheme) {
                     ForEach(NotchTheme.allCases) { theme in
                         Text(theme.rawValue).tag(theme)

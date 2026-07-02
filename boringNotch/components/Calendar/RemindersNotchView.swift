@@ -15,6 +15,29 @@ struct RemindersNotchView: View {
     @FocusState private var addFieldFocused: Bool
     @State private var newReminderTitle = ""
     @State private var selectingReminderListID: String?
+    let availableSize: CGSize?
+
+    private let verticalPadding: CGFloat = 8
+
+    init(availableSize: CGSize? = nil) {
+        self.availableSize = availableSize
+    }
+
+    private var contentWidth: CGFloat {
+        availableSize?.width ?? 540
+    }
+
+    private var contentHeight: CGFloat {
+        availableSize?.height ?? 142
+    }
+
+    private var innerHeight: CGFloat {
+        max(0, contentHeight - (verticalPadding * 2))
+    }
+
+    private var listHeight: CGFloat {
+        max(72, innerHeight - 54)
+    }
 
     private var visibleReminders: [ReminderModel] {
         calendarManager.reminders.filter { reminder in
@@ -36,8 +59,8 @@ struct RemindersNotchView: View {
             rightRail
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 8)
-        .frame(width: 540, height: 142, alignment: .center)
+        .padding(.vertical, verticalPadding)
+        .frame(width: contentWidth, height: contentHeight, alignment: .center)
         .frame(maxWidth: .infinity, alignment: .center)
         .contentShape(Rectangle())
         .onHover { hovering in
@@ -72,7 +95,7 @@ struct RemindersNotchView: View {
 
     @ViewBuilder
     private var content: some View {
-        if calendarManager.reminderAuthorizationStatus != .fullAccess {
+        if !calendarManager.hasReminderAccess {
             stateMessage("Enable Reminders access to show your list.")
         } else if calendarManager.remindersLoading && calendarManager.reminders.isEmpty {
             loadingState
@@ -99,6 +122,7 @@ struct RemindersNotchView: View {
                 .foregroundStyle(notchTheme.secondaryForeground)
         }
         .frame(width: 260, height: 72, alignment: .center)
+        .frame(height: listHeight, alignment: .center)
     }
 
     private func stateMessage(_ message: String) -> some View {
@@ -107,7 +131,7 @@ struct RemindersNotchView: View {
             .foregroundStyle(notchTheme.secondaryForeground)
             .lineLimit(2)
             .fixedSize(horizontal: false, vertical: true)
-            .frame(width: 260, height: 72, alignment: .topLeading)
+            .frame(width: 260, height: listHeight, alignment: .topLeading)
             .padding(.top, 2)
     }
 
@@ -121,7 +145,7 @@ struct RemindersNotchView: View {
             .padding(.trailing, 4)
         }
         .scrollIndicators(.visible)
-        .frame(width: 260, height: 72, alignment: .topLeading)
+        .frame(width: 260, height: listHeight, alignment: .topLeading)
     }
 
     private func reminderRow(_ reminder: ReminderModel) -> some View {
@@ -192,7 +216,7 @@ struct RemindersNotchView: View {
             }
             .disabled(calendarManager.remindersLoading)
 
-            if calendarManager.reminderAuthorizationStatus != .fullAccess {
+            if !calendarManager.hasReminderAccess {
                 controlButton(icon: permissionButtonIcon, title: permissionButtonTitle) {
                     handlePermissionAction()
                 }
@@ -208,7 +232,7 @@ struct RemindersNotchView: View {
             addReminderControl
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
-        .frame(width: 224, height: 126, alignment: .center)
+        .frame(width: 224, height: innerHeight, alignment: .center)
     }
 
     private var reminderListMenu: some View {
@@ -349,7 +373,7 @@ struct RemindersNotchView: View {
     }
 
     private var statusTitle: String {
-        if calendarManager.reminderAuthorizationStatus != .fullAccess {
+        if !calendarManager.hasReminderAccess {
             return "Reminders"
         }
 
@@ -357,7 +381,7 @@ struct RemindersNotchView: View {
     }
 
     private var statusIcon: String {
-        calendarManager.reminderAuthorizationStatus == .fullAccess ? "checklist.checked" : "lock.slash"
+        calendarManager.hasReminderAccess ? "checklist.checked" : "lock.slash"
     }
 
     private var permissionButtonTitle: String {
@@ -402,12 +426,11 @@ struct RemindersNotchView: View {
     }
 
     private func handlePermissionAction() {
-        switch calendarManager.reminderAuthorizationStatus {
-        case .notDetermined:
+        if calendarManager.canRequestReminderAuthorization {
             Task {
                 await calendarManager.requestReminderAuthorization()
             }
-        default:
+        } else {
             openReminderSettings()
         }
     }

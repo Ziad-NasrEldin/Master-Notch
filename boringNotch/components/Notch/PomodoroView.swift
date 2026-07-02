@@ -207,7 +207,25 @@ final class PomodoroTimerModel: ObservableObject {
 struct PomodoroView: View {
     @ObservedObject private var timer = PomodoroTimerModel.shared
     @Default(.notchTheme) private var notchTheme
+    let availableSize: CGSize?
     private let leftPaneLeadingInset: CGFloat = 12
+    private let verticalPadding: CGFloat = 8
+
+    init(availableSize: CGSize? = nil) {
+        self.availableSize = availableSize
+    }
+
+    private var contentWidth: CGFloat {
+        availableSize?.width ?? 540
+    }
+
+    private var outerHeight: CGFloat {
+        availableSize?.height ?? 142
+    }
+
+    private var innerHeight: CGFloat {
+        max(0, outerHeight - (verticalPadding * 2))
+    }
 
     var body: some View {
         HStack(alignment: .center, spacing: 14) {
@@ -224,8 +242,9 @@ struct PomodoroView: View {
 
             rightRail
         }
-        .frame(width: 540, height: 126, alignment: .center)
-        .padding(.vertical, 8)
+        .frame(width: contentWidth, height: innerHeight, alignment: .center)
+        .padding(.vertical, verticalPadding)
+        .frame(width: contentWidth, height: outerHeight, alignment: .center)
         .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
     }
 
@@ -279,7 +298,7 @@ struct PomodoroView: View {
             durationControls
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
-        .frame(width: 256, height: 126, alignment: .center)
+        .frame(width: 256, height: innerHeight, alignment: .center)
     }
 
     private var durationControls: some View {

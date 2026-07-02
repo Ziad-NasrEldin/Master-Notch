@@ -15,7 +15,12 @@ struct ShelfView: View {
     @StateObject var selection = ShelfSelectionModel.shared
     @StateObject private var quickLookService = QuickLookService()
     @Default(.notchTheme) private var notchTheme
+    let availableSize: CGSize?
     private let spacing: CGFloat = 8
+
+    init(availableSize: CGSize? = nil) {
+        self.availableSize = availableSize
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -32,6 +37,7 @@ struct ShelfView: View {
             updateQuickLookSelection()
         }
         .quickLookPresenter(using: quickLookService)
+        .frame(width: availableSize?.width, height: availableSize?.height, alignment: .center)
     }
     
     private func handleDrop(providers: [NSItemProvider]) -> Bool {

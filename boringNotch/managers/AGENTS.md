@@ -13,6 +13,7 @@
 ## Local Contracts
 
 - Key local files: BatteryActivityManager.swift, BrightnessManager.swift, CalendarManager.swift, ImageService.swift, MusicManager.swift, NotchSpaceManager.swift, SpotifyAdDampenerManager.swift, VolumeManager.swift, WebcamManager.swift.
+- `CalendarManager.swift` owns Reminders authorization state; passive checks must not trigger the system Reminders permission prompt.
 - Preserve public interfaces, route names, data shapes, and documented workflows unless the task explicitly changes them.
 
 ## Work Guidance
