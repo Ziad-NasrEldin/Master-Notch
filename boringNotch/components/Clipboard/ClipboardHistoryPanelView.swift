@@ -49,24 +49,16 @@ struct ClipboardHistoryPanelView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center, spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.thinMaterial)
-                    Image(systemName: "doc.on.clipboard")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.primary)
-                }
-                .frame(width: 46, height: 46)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(.quaternary, lineWidth: 1)
-                )
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: "doc.on.clipboard")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 24, height: 24)
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Clipboard")
-                        .font(.system(size: 25, weight: .semibold, design: .default))
+                        .font(.system(size: 22, weight: .semibold, design: .default))
                         .foregroundStyle(.primary)
                     HStack(spacing: 6) {
                         Circle()
@@ -85,12 +77,12 @@ struct ClipboardHistoryPanelView: View {
                         viewModel.toggleUserPaused()
                     } label: {
                         Image(systemName: viewModel.isUserPaused ? "play.fill" : "pause.fill")
-                            .font(.system(size: 12, weight: .bold))
-                            .frame(width: 31, height: 31)
-                            .background(.thinMaterial, in: Circle())
+                            .font(.system(size: 11, weight: .bold))
+                            .frame(width: 28, height: 28)
+                            .contentShape(Circle())
                     }
                     .buttonStyle(.borderless)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(.secondary)
                     .help(viewModel.isUserPaused ? "Resume clipboard history" : "Pause clipboard history")
                 }
             }
@@ -102,7 +94,7 @@ struct ClipboardHistoryPanelView: View {
     }
 
     private var activeContent: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             filterBar
                 .padding(.horizontal, 18)
 
@@ -116,13 +108,13 @@ struct ClipboardHistoryPanelView: View {
                     .padding(.horizontal, 18)
             } else {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 14) {
+                    LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(viewModel.sections) { section in
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(section.title)
-                                    .font(.caption.weight(.semibold))
+                                    .font(.caption2.weight(.semibold))
                                     .textCase(.uppercase)
-                                    .tracking(0.8)
+                                    .tracking(0.4)
                                     .foregroundStyle(.secondary)
                                     .padding(.horizontal, 2)
 
@@ -141,7 +133,7 @@ struct ClipboardHistoryPanelView: View {
                         }
                     }
                     .padding(.horizontal, 18)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 12)
                 }
                 .scrollIndicators(.never)
             }
@@ -183,19 +175,22 @@ struct ClipboardHistoryPanelView: View {
                     .font(.caption.weight(.semibold))
                 }
 
-                if let updater {
-                    CheckForUpdatesView(updater: updater)
-                        .font(.caption.weight(.semibold))
-                }
-
-                Button("Settings") {
+                Button {
                     SettingsWindowController.shared.showWindow()
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 13, weight: .semibold))
+                        .frame(width: 26, height: 26)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(.primary)
-                .font(.caption.weight(.semibold))
+                .help("Settings")
 
                 Menu {
+                    if let updater {
+                        CheckForUpdatesView(updater: updater)
+                        Divider()
+                    }
                     Button("Restart minitap") {
                         ApplicationRelauncher.restart()
                     }
@@ -250,11 +245,11 @@ private struct ClipboardSearchField: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.vertical, 8)
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
         )
     }
 }
@@ -271,9 +266,9 @@ private struct ClipboardHistoryRow: View {
     @State private var isHovering = false
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
+        HStack(alignment: .center, spacing: 8) {
             Button(action: onCopy) {
-                HStack(alignment: .center, spacing: 12) {
+                HStack(alignment: .center, spacing: 10) {
                     thumbnail
                     textContent
                     Spacer(minLength: 0)
@@ -286,15 +281,14 @@ private struct ClipboardHistoryRow: View {
                 .opacity(isHovering || isCopied ? 1 : 0)
                 .animation(.smooth(duration: 0.16), value: isHovering)
         }
-        .padding(10)
-        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .background(rowBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(rowBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(isHovering ? Color.primary.opacity(0.13) : Color.primary.opacity(0.06), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(rowStrokeColor, lineWidth: 1)
         )
-        .shadow(color: Color.black.opacity(isHovering ? 0.16 : 0.07), radius: isHovering ? 10 : 4, y: 4)
-        .scaleEffect(isHovering ? 1.01 : 1)
         .onHover { hovering in
             isHovering = hovering
         }
@@ -303,8 +297,8 @@ private struct ClipboardHistoryRow: View {
     }
 
     private var textContent: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            HStack(spacing: 7) {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
                 Text(item.previewTitle)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.primary)
@@ -316,33 +310,27 @@ private struct ClipboardHistoryRow: View {
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(Color.effectiveAccent)
                 }
+
+                if isCopied {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.green)
+                }
             }
 
-            Text(item.detailText)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 if let sourceIcon {
                     Image(nsImage: sourceIcon)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 15, height: 15)
-                        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                } else {
-                    Image(systemName: item.kind.systemImage)
-                        .font(.system(size: 11, weight: .semibold))
+                        .frame(width: 12, height: 12)
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
                 }
 
-                Text(sourceLine)
+                Text(metadataLine)
                     .lineLimit(1)
 
                 Spacer(minLength: 0)
-
-                if isCopied {
-                    Label("Copied", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                }
             }
             .font(.caption2.weight(.semibold))
             .foregroundStyle(.tertiary)
@@ -352,26 +340,26 @@ private struct ClipboardHistoryRow: View {
     @ViewBuilder
     private var thumbnail: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.thinMaterial)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.045))
 
             if item.kind == .image, let image {
                 Image(nsImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 66, height: 66)
+                    .frame(width: 42, height: 42)
                     .clipped()
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             } else {
                 Image(systemName: item.kind.systemImage)
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
         }
-        .frame(width: 66, height: 66)
+        .frame(width: 42, height: 42)
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(.quaternary, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
     }
 
@@ -379,32 +367,46 @@ private struct ClipboardHistoryRow: View {
         HStack(spacing: 6) {
             Button(action: onPin) {
                 Image(systemName: item.isPinned ? "pin.slash" : "pin")
-                    .frame(width: 25, height: 25)
-                    .background(.thinMaterial, in: Circle())
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 22, height: 22)
             }
             .buttonStyle(.plain)
+            .foregroundStyle(item.isPinned ? Color.effectiveAccent : Color.primary.opacity(0.58))
             .help(item.isPinned ? "Unpin" : "Pin")
 
             Button(role: .destructive, action: onDelete) {
                 Image(systemName: "trash")
-                    .frame(width: 25, height: 25)
-                    .background(.thinMaterial, in: Circle())
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 22, height: 22)
                     .foregroundStyle(.red)
             }
             .buttonStyle(.plain)
             .help("Delete")
         }
-        .foregroundStyle(.primary)
     }
 
     private var rowBackground: some ShapeStyle {
         if isCopied {
-            return AnyShapeStyle(Color.green.opacity(0.14))
+            return AnyShapeStyle(Color.green.opacity(0.10))
         }
         if isHovering {
-            return AnyShapeStyle(.regularMaterial)
+            return AnyShapeStyle(Color.primary.opacity(0.045))
         }
-        return AnyShapeStyle(.thinMaterial)
+        return AnyShapeStyle(Color.clear)
+    }
+
+    private var rowStrokeColor: Color {
+        if isCopied {
+            return Color.green.opacity(0.18)
+        }
+        if isHovering {
+            return Color.primary.opacity(0.08)
+        }
+        return Color.clear
+    }
+
+    private var metadataLine: String {
+        "\(item.detailText) • \(sourceLine)"
     }
 
     private var sourceLine: String {
