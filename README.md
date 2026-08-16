@@ -6,64 +6,31 @@
   <br>
 </h1>
 
-minitap turns the MacBook notch into a compact control surface for media, calendar context, file handoff, clipboard history, system HUDs, focus tools, and quick visual checks.
-It uses the minitap identity across the app: light surfaces, purple accent controls, Archivo UI typography, Clash Display headings, and a bundled minitap app icon.
+The MacBook notch, turned into a control surface. Media, calendar, files, clipboard, and focus — without leaving the top of the screen.
 
-## Requirements
+Built for people who live on a Mac and want the notch to do something useful, not just sit there.
 
-- macOS 14 Sonoma or later.
-- Apple Silicon or Intel Mac.
-- Xcode 16 or later for local development.
+- Control what’s playing, and see what’s next on your calendar
+- Hand off files and grab clipboard history from the notch
+- Replace noisy system HUDs with something you actually glance at
+- Keep focus tools one hover away
 
-## Install
+**Try it:** [minitap.ai](https://www.minitap.ai)
+
+### Install
 
 Open the release DMG, then move `minitap.app` to `/Applications`.
 
-If macOS shows an unidentified developer warning, remove the quarantine flag after moving the app:
+If macOS warns about an unidentified developer:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/minitap.app
 ```
 
-Then open minitap normally.
+Needs macOS 14 or later (Apple Silicon or Intel). Xcode build and packaging notes live in [`docs/building.md`](docs/building.md).
 
-## Use
+---
 
-- Launch minitap.
-- Hover over the notch to expand the surface.
-- Use media controls, calendar context, Shelf, clipboard history, mirror, battery state, and HUD replacement features from the notch.
-- Open the menu bar item to configure behavior, appearance, media controls, permissions, and advanced options.
+Built by [Ziad Ahmed](https://github.com/Ziad-NasrEldin) at [MaVoid](https://mavoid.com).
 
-## Build
-
-Clone this repository, open the Xcode project, then build the app target:
-
-```bash
-open boringNotch.xcodeproj
-```
-
-The built app product is `minitap.app`.
-The app bundle identifier is `ai.minitap.minitap`.
-The XPC helper bundle identifier is `ai.minitap.minitap.MinitapXPCHelper`.
-The Spotify callback URL scheme is `minitap://spotify-auth/callback`.
-
-## Package
-
-The DMG wrapper expects the renamed app bundle:
-
-```bash
-Configuration/dmg/create_dmg.sh /path/to/minitap.app /path/to/minitap.dmg minitap
-```
-
-The Sparkle feed URL is configured as `https://www.minitap.ai/appcast.xml`.
-Host a signed appcast at that URL before shipping updater-enabled builds.
-
-## Contribute
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
-Keep user-facing copy, bundle identifiers, URL schemes, and app assets aligned with the minitap brand contract in `boringNotch/models/MinitapBrand.swift`.
-
-## Acknowledgments
-
-minitap builds on SwiftUI, Sparkle, LaunchAtLogin, Defaults, KeyboardShortcuts, Lottie, AsyncXPCConnection, MacroVisionKit, MediaRemoteAdapter, and related open-source work.
-See [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) for attribution details.
+[Website](https://mavoid.com) · [LinkedIn](https://linkedin.com/in/ziad-ahmed-634202332) · [GitHub](https://github.com/Ziad-NasrEldin)
